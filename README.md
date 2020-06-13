@@ -2,7 +2,7 @@
 
 Display your currently playing music track on an e-ink display.
 
-![Example of what it looks like](https://user-images.githubusercontent.com/25515609/84536452-c6bd3b80-ace5-11ea-82b6-4c9f22ed3a6a.jpg)
+![Example of what it looks like](https://user-images.githubusercontent.com/25515609/84579142-7e744b00-adc3-11ea-8c77-584094464639.jpg)
 
 Works in real time with your local Sonos sytem. Also includes functionality to pull last played tracks and music history from last.fm.
 
