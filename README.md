@@ -1,44 +1,35 @@
-# Last.fm user data API
+# Music screen
 
-Simple python script which pulls down user data from last.fm
+Display your currently playing music track on an e-ink display.
 
-This information is publicly available for all users so there is no need to be logged in to last.fm. You also don't need to change the public key in the code.
+![Example of what it looks like](https://user-images.githubusercontent.com/25515609/84536452-c6bd3b80-ace5-11ea-82b6-4c9f22ed3a6a.jpg)
+
+Works in real time with your local Sonos sytem. Also includes functionality to pull last played tracks and music history from last.fm.
+
+No authentication required for either service.
+
+Note: this replaces the now depricated [ink-music-stats](https://github.com/hankhank10/ink-music-stats) repo.
+
+# Required hardware
+
+Raspberry Pi (Zero - 4)
+
+[Pimoroni inky wHAT](https://shop.pimoroni.com/products/inky-what?variant=21214020436051)
 
 # Installation
 
-Clone or download lastfm_user_data.py into your project folder.  Add the following to the start of your script:
+Install and have a running version of [node-sonos-http-api](https://github.com/jishi/node-sonos-http-api)
 
-```include lastfm_user_data```
+Install the Pimoroni inky wHAT on your Raspberry Pi.  Ensure that you have enabled I2C in ```raspi-config```
 
-# Functionality
-## Pull static user data
+Install the Pimoroni *inky* library using ```pip install inky```
 
-The first function returns static data about a specific user, for instance the following command which will return the user's home page URL:
+Clone or download this repo into your Raspberry Pi.
 
-```lastfm_user_data.static_data(requested_username, "url")```
+Run one of the following python scripts depending on your desired functionality:
 
-It will return any of the data made available by the API if requested. You can see an example list of which static fields are available [here](
-http://ws.audioscrobbler.com/2.0/?method=user.getinfo&user=test&api_key=079a7d64ea52c358ad4f0afbe2f900b3&format=json)
-
-## Return play counts 
-
-.playcount returns an integer of the number of tracks played by that user over a specific period:
-
-```lastfm_user_data.playcount(requested_username, "") # this defaults to forever
-lastfm_user_data.playcount(requested_username, "this_year")
-lastfm_user_data.playcount(requested_username, "this_month")
-lastfm_user_data.playcount(requested_username, "this_week")
-lastfm_user_data.playcount(requested_username, "today")
-lastfm_user_data.playcount(requested_username, "last30days")
-lastfm_user_data.playcount(requested_username, "last7days")
-lastfm_user_data.playcount(requested_username, "last24hours")
-lastfm_user_data.playcount(requested_username, "last_hour")
+```python3 gosonos.py "YOUR SONOS ROOM NAME"
+python3 golast.py "YOUR LASTFM USERNAME"
 ```
 
-## Return last track played
-
-.lastplayed returns four text variables: the name of the track, artist, album and the album art image url.
-
-# Example
-
-There is an example (example.py) provided which calls and outputs the playcount for a specified user.
+You probably want to automate the running of these commands on startup using PM2 or something similar.
