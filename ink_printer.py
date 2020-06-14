@@ -10,6 +10,7 @@ rotate = 180  # this can only be 0 or 180 depending on whether you want it upsid
 
 # Set amount of padding
 top_padding = 15
+top_padding_extra_for_radio = 75  #if playing radio then there is no artist or album, so makes sense to put the data we do have more centrally
 left_padding = 10
 line_padding = 5
 
@@ -117,12 +118,15 @@ def print_text_to_ink(track, artist, album, stat1 = "", stat2 = "", stat3 = "", 
         
         track = reflowed
 
-        # work out how many lines in the string
+        # work out how many lines in the track string
         number_of_track_lines = len(track.splitlines())
         print ("Track name is split over " + str(number_of_track_lines) + " lines")
 
         # write the various lines to the image
         write_new_line (" ", summary_top_gap)
+
+        if artist == "" and album == "":
+            write_new_line (" ", top_padding_extra_for_radio)
 
         for line in track.splitlines():
             write_new_line (line, summary_fontsize_for_track, "center", True)       

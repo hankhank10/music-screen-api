@@ -12,7 +12,7 @@ number_of_sheep_counted = 0
 frequency = 0.5  # number of seconds between checks of the API
 sleep_mode_enabled = True
 sleep_mode_frequency = 5
-sleep_mode_sheep_to_count = 8
+sleep_mode_sheep_to_count = 20
 sleep_mode_output = "logo" # can also be "blank"
 
 # check if a command line argument has been passed to identify the user, if not ask
