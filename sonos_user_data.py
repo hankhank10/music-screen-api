@@ -2,6 +2,12 @@ import urllib.request
 import json
 import sonos_settings
 
+def find_radio_station_name(filename):
+    if filename == "bbc_radio_two.m3u8": return "BBC Radio 2"
+    
+    # if not found:
+    return "Radio"
+
 def current(sonos_room):
     # convert any spaces to url-suitable character
     sonos_room = sonos_room.replace(" ", "%20")
@@ -14,10 +20,17 @@ def current(sonos_room):
     obj = json.loads(data)
 
     # extract relevant data
-    current_trackname = obj['currentTrack']['title']
-    current_artist = obj['currentTrack']['artist']
-    current_album = obj['currentTrack']['album']
-    current_image = obj['currentTrack']['absoluteAlbumArtUri']
     playing_status = obj['playbackState']
-
+    type_playing = obj['currentTrack']['type']
+    if type_playing == "radio":
+        current_trackname = str(find_radio_station_name(obj['currentTrack']['title']))
+        current_artist = ""
+        current_album = ""
+        current_image = ""
+    else:
+        current_trackname = obj['currentTrack']['title']
+        current_artist = obj['currentTrack']['artist']
+        current_album = obj['currentTrack']['album']
+        current_image = obj['currentTrack']['absoluteAlbumArtUri']
+    
     return current_trackname, current_artist, current_album, current_image, playing_status
