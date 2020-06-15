@@ -35,8 +35,9 @@ Clone or download this repo into your Raspberry Pi.
 
 Run one of the following python scripts depending on your desired functionality:
 
-```python3 gosonos.py "YOUR SONOS ROOM NAME"
-python3 golast.py "YOUR LASTFM USERNAME"
+```
+python3 go_sonos.py "YOUR SONOS ROOM NAME"
+python3 go_last.py "YOUR LASTFM USERNAME"
 ```
 
 You probably want to automate the running of these commands on startup using PM2 or something similar.
