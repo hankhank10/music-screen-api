@@ -8,7 +8,7 @@ Works in real time with your local Sonos sytem. Also includes functionality to p
 
 No authentication required for either service.
 
-Note: this replaces the now depricated [ink-music-stats](https://github.com/hankhank10/ink-music-stats) repo.
+Note: this replaces the now deprecated [ink-music-stats](https://github.com/hankhank10/ink-music-stats) repo.
 
 # Required hardware
 
