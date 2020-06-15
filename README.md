@@ -1,6 +1,6 @@
 # Music screen
 
-Display your currently playing music track on an e-ink display.
+Display your currently playing music track on a constantly updated e-ink display.
 
 ![Example of what it looks like](https://user-images.githubusercontent.com/25515609/84579142-7e744b00-adc3-11ea-8c77-584094464639.jpg)
 
