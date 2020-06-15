@@ -3,9 +3,20 @@ import json
 import sonos_settings
 
 def find_unknown_radio_station_name(filename):
+    # BBC streams started via alexa don't return their real name, which is annoying... but fixable:
+    # if you find other stations which are not shown then you can add them below. Please put up on github will a pull request if you do
     if filename == "bbc_radio_two.m3u8": return "BBC Radio 2"
     if filename == "bbc_6music.m3u8": return "BBC Radio 6 Music"
-    
+    if filename == "bbc_radio_hereford_worcester.m3u8": return "BBC Hereford & Worcester"
+    if filename == "bbc_radio_one.m3u8": return "BBC Radio 1"
+    if filename == "bbc_1xtra.m3u8": return "BBC Radio 1Xtra"
+    if filename == "bbc_radio_two.m3u8": return "BBC Radio 2"
+    if filename == "bbc_radio_three.m3u8": return "BBC Radio 3"
+    if filename == "bbc_radio_fourfm.m3u8": return "BBC Radio 4"
+    if filename == "bbc_radio_five_live.m3u8": return "BBC Radio 5 Live"
+    if filename == "bbc_radio_five_live_sports_extra.m3u8": return "BBC Radio 5 Live Sports Extra"
+    if filename == "bbc_world_service.m3u8": return "BBC World Service"
+
     # if not found:
     return "Radio"
 
