@@ -16,13 +16,20 @@ Raspberry Pi (Zero - 4)
 
 [Pimoroni inky wHAT](https://shop.pimoroni.com/products/inky-what?variant=21214020436051)
 
-# Installation
+# Step-by-step beginner installation instructions
+
+I have put together step-by-step basic instructions [on hackster here](https://www.hackster.io/mark-hank/currently-playing-music-on-e-ink-display-310645)
+
+# Advanced user installation instructions
 
 Install and have a running version of [node-sonos-http-api](https://github.com/jishi/node-sonos-http-api)
 
-Install the Pimoroni inky wHAT on your Raspberry Pi.  Ensure that you have enabled I2C in ```raspi-config```
+Put the Pimoroni inky wHAT hardware on your Raspberry Pi. (Do with power off, obviously)
 
-Install the Pimoroni *inky* library using ```pip install inky```
+Install the inky library with
+```curl https://get.pimoroni.com/inky | bash```
+
+(Don't be tempted to pip install the inky library - the install script does a bunch of other stuff you need)
 
 Clone or download this repo into your Raspberry Pi.
 
