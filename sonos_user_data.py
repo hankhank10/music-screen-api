@@ -1,7 +1,6 @@
 import urllib.request
 import json
 import sonos_settings
-import demaster
 
 def find_unknown_radio_station_name(filename):
     # BBC streams started via alexa don't return their real name, which is annoying... but fixable:
@@ -70,8 +69,5 @@ def current(sonos_room):
         if 'artist' in obj['currentTrack']: current_artist = obj['currentTrack']['artist']
         if 'album' in obj['currentTrack']: current_album = obj['currentTrack']['album']
         if 'absoluteAlbumArtUri' in obj['currentTrack']: current_image = obj['currentTrack']['absoluteAlbumArtUri']
-    
-    if sonos_settings.demaster == True:
-        current_trackname = demaster.strip_name (current_trackname)
 
     return current_trackname, current_artist, current_album, current_image, playing_status

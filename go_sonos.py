@@ -2,6 +2,7 @@ import time # needed to delay x seconds between checks
 import sonos_user_data # the api which pulls the lastfm data
 import sys # needed to pull command line arguments
 import ink_printer # does the printing to ink
+import sonos_settings
 
 # set globals to nil at the start of the script
 previous_track_name = ""
@@ -41,12 +42,16 @@ while True:
             print ("no change to data - not refreshing")
         else:
             print ("new data found from api - refreshing screen")
+            previous_track_name = current_track
+
+            # demaster the track name if set to do so
+            if sonos_settings.demaster == True:
+                current_trackname = demaster.strip_name (current_trackname)
 
             #print to the ink
             ink_printer.print_text_to_ink (current_track, current_artist, current_album)
 
             # keep a record of the previous track name to see if it changes next time
-            previous_track_name = current_track
     else:
         # nothing is playing right now
 
