@@ -48,7 +48,7 @@ while True:
 
             # demaster the track name if set to do so
             if sonos_settings.demaster == True:
-                current_trackname = demaster.strip_name (current_trackname)
+                current_track = demaster.strip_name (current_track)
 
             #print to the ink
             ink_printer.print_text_to_ink (current_track, current_artist, current_album)
