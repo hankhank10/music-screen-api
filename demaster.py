@@ -1,4 +1,3 @@
-import sys
 # this is the demaster script which removes nonsense like "Remastered" and "Live at" from track names
 # latest can be downloaded from https://github.com/hankhank10/demaster
 
@@ -30,18 +29,3 @@ def strip_name(full_song_name):
             return split_out_text[0]
 
     return full_song_name
-
-for a in range (1, 100):
-    print("")
-
-while True:
-    name_to_check = input (">> ")
-
-    text_to_print = strip_name(name_to_check)
-    print (text_to_print)
-    print ("")
-    print ("")
-
-    f = open ("unremaster-output.txt", "a")
-    f.write (name_to_check + " >>> " + text_to_print)
-    f.close
