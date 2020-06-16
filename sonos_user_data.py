@@ -1,6 +1,7 @@
 import requests
 import json
 import sonos_settings
+import time
 
 def find_unknown_radio_station_name(filename):
     # BBC streams started via alexa don't return their real name, which is annoying... but fixable:
@@ -35,6 +36,13 @@ def current(sonos_room):
     url = "http://" + sonos_settings.sonos_http_api_address + ":" + sonos_settings.sonos_http_api_port + "/" + sonos_room + "/state"
 
     # download the raw json object and parse the json data
+    try:
+        data = requests.get(url)
+    except requests.ConnectionError:
+        print ("Error: http-sonos-api failed to answer; pausing 10 seconds to give it a chance to catch up")
+        time.sleep (10)
+        return "", "", "", "", "API error"
+
     data = requests.get (url)
     obj = json.loads(data.text)
 
