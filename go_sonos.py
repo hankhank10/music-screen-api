@@ -2,7 +2,9 @@ import time # needed to delay x seconds between checks
 import sonos_user_data # the api which pulls the lastfm data
 import sys # needed to pull command line arguments
 import ink_printer # does the printing to ink
+
 import sonos_settings
+import demaster
 
 # set globals to nil at the start of the script
 previous_track_name = ""
