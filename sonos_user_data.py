@@ -1,4 +1,4 @@
-import urllib.request
+import requests
 import json
 import sonos_settings
 
@@ -35,8 +35,8 @@ def current(sonos_room):
     url = "http://" + sonos_settings.sonos_http_api_address + ":" + sonos_settings.sonos_http_api_port + "/" + sonos_room + "/state"
 
     # download the raw json object and parse the json data
-    data = urllib.request.urlopen(url).read().decode()
-    obj = json.loads(data)
+    data = requests.get (url)
+    obj = json.loads(data.text)
 
     # extract relevant data
     playing_status = obj['playbackState']
