@@ -27,6 +27,9 @@ else:
     sonos_room = str(sys.argv[1])
     print (sonos_room)
     
+if sonos_settings.pi_zero:
+    time.sleep (60)
+
 # loop to refresh every [frequency] seconds
 while True:
     # gather last played information from Sonos api
