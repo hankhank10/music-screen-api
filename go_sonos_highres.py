@@ -1,3 +1,6 @@
+# This file is for use with the Pimoroni HyperPixel 4.0 Square (Non Touch) High Res display
+# it integrates with your local Sonos sytem to display what is currently playing
+
 import tkinter as tk
 import tkinter.font as tkFont
 import time

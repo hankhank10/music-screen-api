@@ -1,3 +1,6 @@
+# This file is for use with the Pimoroni inky wHAT display
+# it integrates with your local Sonos sytem to display what is currently playing
+
 import time # needed to delay x seconds between checks
 import sonos_user_data # the api which pulls the lastfm data
 import sys # needed to pull command line arguments

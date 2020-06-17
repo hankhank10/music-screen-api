@@ -1,3 +1,6 @@
+# This file is for use with the Pimoroni inky wHAT display
+# it pulls data from the last.fm API to show recently played tracks and listening stats
+
 import urllib.request
 import json
 from datetime import datetime, timedelta
