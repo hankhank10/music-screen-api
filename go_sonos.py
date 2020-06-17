@@ -28,6 +28,7 @@ else:
     print (sonos_room)
     
 if sonos_settings.pi_zero:
+    print ("Pausing for 60 seconds on startup to let pi zero catch up")
     time.sleep (60)
 
 # loop to refresh every [frequency] seconds
