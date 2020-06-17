@@ -12,7 +12,8 @@ Note: this replaces the now deprecated [ink-music-stats](https://github.com/hank
 
 # Required hardware
 
-Raspberry Pi (Zero - 4)
+Raspberry Pi 3 or 4
+Note: a Pi Zero WH can be made to run this - BUT see below for note on how to get this working
 
 [Pimoroni inky wHAT](https://shop.pimoroni.com/products/inky-what?variant=21214020436051)
 
@@ -42,6 +43,16 @@ python3 go_last.py YOUR_LASTFM_USERNAME
 ```
 
 You probably want to automate the running of these commands on startup using PM2 or something similar.
+
+# Important notice on Pi Zero
+
+This script can be got running with a Pi Zero, however you will want to note two things:
+
+1. Save yourself a headache and ensure you're getting a Pi Zero WH (ie wireless and with headers pre-soldered)
+
+2. It runs pretty poorly on a Pi Zero due to the processing requirements. Actually this script runs fine, but it can struggle to do this and the http-sonos-api consistently. If you are set on running on a Pi Zero then either have the sonos-api running on a different local machine (and redirect to that IP address in sonos_settings.py) or set the Pi_Zero flag in sonos_settings.py to True (this slows down the frequency of requests)
+
+(Thanks to reddit user u/Burulambie for helping me trouble shoot this)
 
 # Important notice on "demaster"
 
