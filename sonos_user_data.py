@@ -40,7 +40,7 @@ def current(sonos_room):
         data = requests.get(url)
     except requests.ConnectionError:
         print ("Error: http-sonos-api failed to answer; pausing 10 seconds to give it a chance to catch up")
-        time.sleep (10)
+        time.sleep (20)
         return "", "", "", "", "API error"
 
     data = requests.get (url)
