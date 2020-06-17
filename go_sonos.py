@@ -12,7 +12,7 @@ sleep_mode_sleeping = False
 number_of_sheep_counted = 0
 
 # user variables
-frequency = 0.5  # number of seconds between checks of the API
+frequency = 1  # number of seconds between checks of the API
 sleep_mode_enabled = True
 sleep_mode_frequency = 5
 sleep_mode_sheep_to_count = 20
