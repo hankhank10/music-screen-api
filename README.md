@@ -26,7 +26,7 @@ Note: a Pi Zero WH can be made to run the e-ink version - BUT see below for note
 I have put together step-by-step basic instructions:
 
 - [e-INK version here](https://www.hackster.io/mark-hank/currently-playing-music-on-e-ink-display-310645)
-- High res version to come
+- [High res version here](https://www.hackster.io/mark-hank/sonos-album-art-on-raspberry-pi-screen-5b0012)
 
 # Important notice on Pi Zero
 
