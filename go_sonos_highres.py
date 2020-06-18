@@ -20,8 +20,8 @@ import demaster
 thumbsize = 600,600   # pixel size of thumbnail if you're displaying detail
 screensize = 720,720  # pixel size of HyperPixel 4.0
 fullscreen = True
-show_details = False   # if set to false then just shows the album art; if set to true then also displays track name + album/artist name
-show_artist_and_album = True   #if set to true then shows artist and album at the bottom; if false just shows track name; won't do anything if show_detail is false
+#show_details = False   # if set to false then just shows the album art; if set to true then also displays track name + album/artist name
+#show_artist_and_album = True   #if set to true then shows artist and album at the bottom; if false just shows track name; won't do anything if show_detail is false
 
 # Declare global variables (don't mess with these)
 root = None
@@ -66,22 +66,28 @@ def update():
             if sonos_settings.demaster:
                 current_trackname = demaster.strip_name (current_trackname)
 
-            # show the image
+            # pull the image from the uri provided
             image_url = current_image
-            image_url_response = requests.get(image_url)
-            pil_image = Image.open(BytesIO(image_url_response.content))
 
-            #pil_image = Image.open ('Bleachers.jpg')
+            image_failed_to_load = False
+            try:
+                image_url_response = requests.get(image_url)
+                pil_image = Image.open(BytesIO(image_url_response.content))
+            except:
+                pil_image = Image.open ('sonos-black.png')  
+                target_image_width = 500              
 
-            if show_details == True:
+            # set the image size based on whether we are showing track details as well
+            if sonos_settings.show_details == True:
                 target_image_width = thumbwidth
             else:
                 target_image_width = screenwidth
 
+            # resize the image
             wpercent = (target_image_width/float(pil_image.size[0]))
             hsize = int((float(pil_image.size[1])*float(wpercent)))
             pil_image = pil_image.resize((target_image_width,hsize), Image.ANTIALIAS)
-                        
+            
             tk_image = ImageTk.PhotoImage(pil_image)
             label_albumart.configure (image = tk_image)
 
@@ -98,14 +104,15 @@ def update():
 ###############################################################################
 # Main script
 
-# check if a command line argument has been passed to identify the user, if not ask
-if len(sys.argv) == 1:
-    # if no room name passed then ask the user to input a room name
-    sonos_room = input ("Enter a Sonos room name >>>  ")
+if sonos_settings.room_name_for_highres == "":
+    print ("No room name found in sonos_settings.py")
+    print ("You can specify a room name manually below")
+    print ("Note: manual entry works for testing purposes, but if you want this to run automatically on startup then you should specify a room name in sonos_settings.py")
+    print ("You can edit the file with the command: nano sonos_settings.py")
+    print ("")
+    sonos_room = input ("Enter a Sonos room name for testing purposes>>>  ")
 else:
-    # if command line includes username then set it to that
-    sonos_room = str(sys.argv[1])
-    print (sonos_room)
+    sonos_room = sonos_settings.room_name_for_highres
 
 # Create the main window
 root = tk.Tk()
@@ -121,7 +128,7 @@ frame.pack(fill=tk.BOTH, expand=1)
 # Set variables
 track_name = tk.StringVar()
 detail_text = tk.StringVar()
-if show_artist_and_album:
+if sonos_settings.show_artist_and_album:
     track_font = tkFont.Font(family='Helvetica', size=30)
 else:
     track_font = tkFont.Font(family='Helvetica', size=40)
@@ -152,17 +159,17 @@ label_detail = tk.Label(frame,
                         justify="center")                      
 
 
-if show_details == False:
+if sonos_settings.show_details == False:
     label_albumart.place (relx=0.5, rely=0.5, anchor=tk.CENTER)
 
-if show_details == True: 
+if sonos_settings.show_details == True: 
     label_albumart.place(x=360, y=thumbsize[1]/2, anchor=tk.CENTER)
     label_track.place (x=360, y=thumbsize[1]+20, anchor=tk.N)
 
     label_track.update()
     height_of_track_label = label_track.winfo_reqheight()
 
-    if show_artist_and_album:
+    if sonos_settings.show_artist_and_album:
         label_detail.place (x=360, y=710, anchor=tk.S)
 
 frame.grid_propagate(False)

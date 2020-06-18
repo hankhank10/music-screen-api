@@ -1,3 +1,7 @@
+# Note: this is not the file where you change your user settings for Sonos
+# if you're looking for that then try sonos_settings.py
+# sorry, I know it's confusingly named - but it's too late to change now!
+
 import requests
 import json
 import sonos_settings

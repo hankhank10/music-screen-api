@@ -9,6 +9,8 @@ api_base_url = 'http://demaster.hankapi.com/demaster?format=simple&long_track_na
 # set user settings
 offline_only_mode = False
 
+# script
+
 def strip_name_offline(full_song_name):
 
     text_to_parse = full_song_name
