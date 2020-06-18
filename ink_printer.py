@@ -7,7 +7,7 @@ import argparse
 # user variable settings
 colour = "black"
 rotate = 0  # this can only be 0 or 180 depending on whether you want it upside down or not
-inverted = True  # back to black
+#inverted = False  # back to black
 
 # Set amount of padding
 top_padding = 15
