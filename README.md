@@ -4,7 +4,7 @@ A set of scripts to display current and recent music information.
 
 It uses either the Pimoroni wHAT e-ink display to display track information; or the Pimoroni HyperPixel 4.0 Square (Non Touch) High Res display to display full colour album art.
 
-![Example of what it looks like](https://user-images.githubusercontent.com/25515609/84579142-7e744b00-adc3-11ea-8c77-584094464639.jpg)
+![Example of what it looks like](https://user-images.githubusercontent.com/25515609/84962206-370cf800-b0fe-11ea-99c9-b3546d847ecc.jpg)
 
 Works in real time with your local Sonos sytem. Also includes functionality to pull last played tracks and music history from last.fm.
 
@@ -26,7 +26,7 @@ Note: a Pi Zero WH can be made to run the e-ink version - BUT see below for note
 I have put together step-by-step basic instructions:
 
 - [e-INK version here](https://www.hackster.io/mark-hank/currently-playing-music-on-e-ink-display-310645)
-- High res version to come
+- [High res version here](https://www.hackster.io/mark-hank/sonos-album-art-on-raspberry-pi-screen-5b0012)
 
 # Important notice on Pi Zero
 
