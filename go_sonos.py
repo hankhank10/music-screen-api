@@ -15,10 +15,14 @@ sleep_mode_sleeping = False
 number_of_sheep_counted = 0
 
 # user variables
-frequency = 1  # number of seconds between checks of the API
+if sonos_settings.pi_zero:
+    frequency = 1  # number of seconds between checks of the API
+    sleep_mode_sheep_to_count = 20
+else:
+    frequency = 0.5
+    sleep_mode_sheep_to_count = 10
 sleep_mode_enabled = True
 sleep_mode_frequency = 5
-sleep_mode_sheep_to_count = 20
 sleep_mode_output = "logo" # can also be "blank"
 
 # check if a command line argument has been passed to identify the user, if not ask
@@ -77,7 +81,7 @@ while True:
             if sleep_mode_sleeping == False:
                 # set the screen depending on settings
                 if sleep_mode_output == "logo":
-                    ink_printer.show_image('/home/pi/music-screen-api/sonos.png')
+                    ink_printer.show_image('/home/pi/music-screen-api/sonos-black-small.png')
                 else:
                     ink_printer.blank_screen()
             

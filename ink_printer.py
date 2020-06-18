@@ -1,12 +1,13 @@
 from inky import InkyWHAT
-from PIL import Image, ImageFont, ImageDraw
+from PIL import Image, ImageFont, ImageDraw, ImageOps
 from font_source_serif_pro import SourceSerifProSemibold
 from font_source_sans_pro import SourceSansProSemibold
 import argparse
 
 # user variable settings
 colour = "black"
-rotate = 180  # this can only be 0 or 180 depending on whether you want it upside down or not
+rotate = 0  # this can only be 0 or 180 depending on whether you want it upside down or not
+inverted = True  # back to black
 
 # Set amount of padding
 top_padding = 15
@@ -180,6 +181,9 @@ def show_image(img_file):
     pal_img.putpalette((255, 255, 255, 0, 0, 0, 255, 0, 0) + (0, 0, 0) * 252)
 
     img = img.convert("RGB").quantize(palette=pal_img)
+
+    #if inverted == True:
+    #img = ImageOps.invert(img)
 
     # Display the final image on Inky wHAT
     inky_display.set_image(img)
