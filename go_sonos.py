@@ -9,11 +9,6 @@ import ink_printer # does the printing to ink
 import sonos_settings
 import demaster
 
-# set globals to nil at the start of the script
-previous_track_name = ""
-sleep_mode_sleeping = False
-number_of_sheep_counted = 0
-
 # user variables
 if sonos_settings.pi_zero:
     frequency = 1  # number of seconds between checks of the API
@@ -24,6 +19,11 @@ else:
 sleep_mode_enabled = True
 sleep_mode_frequency = 5
 sleep_mode_output = "logo" # can also be "blank"
+
+# set globals to nil at the start of the script
+previous_track_name = ""
+sleep_mode_sleeping = False
+number_of_sheep_counted = 0
 
 # check if a command line argument has been passed to identify the user, if not ask
 if len(sys.argv) == 1:

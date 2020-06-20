@@ -2,12 +2,12 @@ from inky import InkyWHAT
 from PIL import Image, ImageFont, ImageDraw, ImageOps
 from font_source_serif_pro import SourceSerifProSemibold
 from font_source_sans_pro import SourceSansProSemibold
+from font_hanken_grotesk import HankenGroteskBold, HankenGroteskMedium
 import argparse
 
 # user variable settings
-colour = "black"
 rotate = 0  # this can only be 0 or 180 depending on whether you want it upside down or not
-#inverted = False  # back to black
+inverted = True  # back to black
 
 # Set amount of padding
 top_padding = 15
@@ -24,15 +24,23 @@ detail_fontsize_for_stats = 20
 
 #set font sizes for summary
 summary_top_gap = 10
-summary_fontsize_for_track = 35
+summary_fontsize_for_track = 45
 summary_gap_between_track_and_artist = 50
 summary_fontsize_for_artist = 27
 summary_gap_between_artist_and_album = 20
 summary_fontsize_for_album = 27
 
 # Set up the correct display and scaling factors
-inky_display = InkyWHAT(colour)
-inky_display.set_border(inky_display.WHITE)
+inky_display = InkyWHAT("black")
+inky_display.set_border(inky_display.BLACK)
+x = 0
+y = 0
+if inverted == True:
+    foreground_colour = inky_display.WHITE
+    background_colour = inky_display.BLACK
+else:  
+    foreground_colour = inky_display.BLACK
+    background_colour = inky_display.WHITE
 
 # find the size of the display
 display_width = inky_display.WIDTH
@@ -42,7 +50,7 @@ display_height = inky_display.HEIGHT
 def write_new_line(text_to_write, font_size, alignment = "center", reflow=False):
     global line_y
     
-    # set font
+    # set font - you can change this to others defined at the top of the script if you like
     font = ImageFont.truetype(SourceSansProSemibold, font_size)
 
     # work out the size of the text
@@ -56,7 +64,7 @@ def write_new_line(text_to_write, font_size, alignment = "center", reflow=False)
         line_x = left_padding
 
     # write text to the canvas
-    draw.text((line_x, line_y), text_to_write, fill=inky_display.BLACK, font=font)
+    draw.text((line_x, line_y), text_to_write, foreground_colour, font=font)
     print ("Printing to ink >>> " + text_to_write)
     
     # move to next line
@@ -79,6 +87,10 @@ def print_text_to_ink(track, artist, album, stat1 = "", stat2 = "", stat3 = "", 
     
     img = Image.new("P", (inky_display.WIDTH, inky_display.HEIGHT))
     draw = ImageDraw.Draw(img)
+
+    for y in range(0, inky_display.HEIGHT):
+        for x in range(0, inky_display.WIDTH):
+            img.putpixel((x, y), background_colour)
 
     # work out if we are in detailed mode or summary mode based on whether we have been passed stat1 or not
     if stat1 is not "":
@@ -141,6 +153,7 @@ def print_text_to_ink(track, artist, album, stat1 = "", stat2 = "", stat3 = "", 
         img = img.rotate(180)
 
     # display the image on the screen
+    
     inky_display.set_image(img)
     inky_display.show()
 
