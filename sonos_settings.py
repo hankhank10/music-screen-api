@@ -14,3 +14,4 @@ show_artist_and_album = True   # if set to true then shows artist and album at t
 
 ## e-ink only settings
 pi_zero = False  #if running on a pi-zero which is also running the sonos-http-api then set this to True to make it wait 120 seconds after boot before hitting the server to improve reliability on startup
+inverted = True

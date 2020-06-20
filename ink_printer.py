@@ -4,10 +4,11 @@ from font_source_serif_pro import SourceSerifProSemibold
 from font_source_sans_pro import SourceSansProSemibold
 from font_hanken_grotesk import HankenGroteskBold, HankenGroteskMedium
 import argparse
+import ...
+
 
 # user variable settings
 rotate = 0  # this can only be 0 or 180 depending on whether you want it upside down or not
-inverted = True  # back to black
 
 # Set amount of padding
 top_padding = 15
@@ -35,7 +36,7 @@ inky_display = InkyWHAT("black")
 inky_display.set_border(inky_display.BLACK)
 x = 0
 y = 0
-if inverted == True:
+if sonos_settings.inverted == True:
     foreground_colour = inky_display.WHITE
     background_colour = inky_display.BLACK
 else:  
@@ -167,8 +168,6 @@ def blank_screen():
 
 def show_image(img_file):
     # Open the image file that was passed in from the argument
-    if inverted:
-        img_file = img_file+"_inverted"
     img = Image.open(img_file)
 
     # Get the width and height of the image
