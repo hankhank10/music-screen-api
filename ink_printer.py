@@ -167,6 +167,8 @@ def blank_screen():
 
 def show_image(img_file):
     # Open the image file that was passed in from the argument
+    if inverted:
+        img_file = img_file+"_inverted"
     img = Image.open(img_file)
 
     # Get the width and height of the image
