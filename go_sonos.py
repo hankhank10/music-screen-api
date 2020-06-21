@@ -81,7 +81,7 @@ while True:
             if sleep_mode_sleeping == False:
                 # set the screen depending on settings
                 if sleep_mode_output == "logo":
-                    ink_printer.show_image('/home/pi/music-screen-api/sonos-black-small.png')
+                    ink_printer.show_image('/home/pi/music-screen-api/sonos-inky.png')                
                 else:
                     ink_printer.blank_screen()
             
