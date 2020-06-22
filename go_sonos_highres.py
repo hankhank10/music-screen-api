@@ -58,13 +58,13 @@ def update():
             # update previous trackname so we know what has changed in future
             previous_polled_trackname = current_trackname
 
-            # set the details we need from the API into variables
-            track_name.set(current_trackname)
-            detail_text.set(current_artist + " • "+ current_album)
-
             # slim down the trackname
             if sonos_settings.demaster:
                 current_trackname = demaster.strip_name (current_trackname)
+
+            # set the details we need from the API into variables
+            track_name.set(current_trackname)
+            detail_text.set(current_artist + " • "+ current_album)
 
             # pull the image from the uri provided
             image_url = current_image
