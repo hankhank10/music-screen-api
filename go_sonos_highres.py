@@ -74,7 +74,7 @@ def update():
                 image_url_response = requests.get(image_url)
                 pil_image = Image.open(BytesIO(image_url_response.content))
             except:
-                pil_image = Image.open ('sonos-black.png')  
+                pil_image = Image.open ('sonos.png')  
                 target_image_width = 500              
 
             # set the image size based on whether we are showing track details as well
