@@ -74,8 +74,8 @@ def update():
                 image_url_response = requests.get(image_url)
                 pil_image = Image.open(BytesIO(image_url_response.content))
             except:
-                pil_image = Image.open ('sonos-black.png')  
-                target_image_width = 500              
+                pil_image = Image.open ('sonos.png')
+                target_image_width = 500
 
             # set the image size based on whether we are showing track details as well
             if sonos_settings.show_details == True:
@@ -87,7 +87,7 @@ def update():
             wpercent = (target_image_width/float(pil_image.size[0]))
             hsize = int((float(pil_image.size[1])*float(wpercent)))
             pil_image = pil_image.resize((target_image_width,hsize), Image.ANTIALIAS)
-            
+
             tk_image = ImageTk.PhotoImage(pil_image)
             label_albumart.configure (image = tk_image)
 
