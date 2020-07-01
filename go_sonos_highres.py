@@ -16,7 +16,7 @@ import scrap
 
 ## Remote debug mode - only activate if you are experiencing issues and want the developer to help
 remote_debug_key = ""
-if remote_debug_mode <> "":
+if remote_debug_key != "":
     scrap.setup (remote_debug_key)
     scrap.auto_scrap_on_print()
     scrap.auto_scrap_on_error()
