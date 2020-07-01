@@ -40,7 +40,7 @@ track_name = None
 detail_text = None
 tk_image = None
 font_size = 0
-previous_polled_trackname = None
+previous_polled_trackname = ""
 thumbwidth = thumbsize[1]
 screenwidth = screensize[1]
 sonos_room = None
@@ -61,11 +61,11 @@ def update():
 
     # see if something is playing
     if playing_status == "PLAYING":
-        if remote_debug_mode != "": print ("Music playing")
+        if remote_debug_key != "": print ("Music playing")
 
         # check whether the track has changed - don't bother updating everything if not
         if current_trackname != previous_polled_trackname:
-            if remote_debug_mode != "": print ("Current track " + current_trackname + " is not same as previous track " + previous_polled_trackname)
+            if remote_debug_key != "": print ("Current track " + current_trackname + " is not same as previous track " + previous_polled_trackname)
 
             # update previous trackname so we know what has changed in future
             previous_polled_trackname = current_trackname
@@ -73,7 +73,7 @@ def update():
             # slim down the trackname
             if sonos_settings.demaster:
                 current_trackname = demaster.strip_name (current_trackname)
-                if remote_debug_mode != "": print ("Demastered to " + current_trackname)
+                if remote_debug_key != "": print ("Demastered to " + current_trackname)
 
             # set the details we need from the API into variables
             track_name.set(current_trackname)
@@ -111,7 +111,7 @@ def update():
         detail_text.set("")
         label_albumart.configure (image = "")
         previous_polled_trackname = ""
-        if remote_debug_mode != "": print ("Track not playing - doing nothing")
+        if remote_debug_key != "": print ("Track not playing - doing nothing")
 
     # Schedule the poll() function for another 500 ms from now
     root.after(500, update)
