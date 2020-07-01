@@ -21,6 +21,7 @@ if remote_debug_mode <> "":
     scrap.auto_scrap_on_print()
     scrap.auto_scrap_on_error()
     scrap.new_section()
+    scrap.write ("App start")
 
 ###############################################################################
 # Parameters and global variables
