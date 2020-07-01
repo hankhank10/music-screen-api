@@ -107,6 +107,9 @@ def update():
             tk_image = ImageTk.PhotoImage(pil_image)
             label_albumart.configure (image = tk_image)
 
+    if playing_status == "API error":
+        if remote_debug_key != "": print ("API error reported fyi")
+        time.sleep (5)
 
     if playing_status != "PLAYING":
         track_name.set("")

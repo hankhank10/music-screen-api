@@ -77,7 +77,10 @@ def current(sonos_room):
             current_image = ""       
 
     if type_playing != "radio":
-        current_trackname = obj['currentTrack']['title']
+        try:
+            current_trackname = obj['currentTrack']['title']
+        except:
+            return "", "", "", "", "API error"
         if 'artist' in obj['currentTrack']: current_artist = obj['currentTrack']['artist']
         if 'album' in obj['currentTrack']: current_album = obj['currentTrack']['album']
         if 'absoluteAlbumArtUri' in obj['currentTrack']: current_image = obj['currentTrack']['absoluteAlbumArtUri']
