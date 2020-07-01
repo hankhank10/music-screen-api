@@ -2,6 +2,7 @@ import os.path
 import sys
 import urllib.request
 import urllib.parse
+import time
 
 api_url = "http://scrap.hankapi.com"
 scrap_key_filename = "scrap_key"
@@ -34,7 +35,7 @@ def write(text):
             with urllib.request.urlopen(request_to_post) as response:
                 x = response.read() 
         except Exception as e:
-            #print (e.message, e.args)
+            time.sleep(5)
 
 def setup(key):
     with open ("scrap_key", "w") as f:
