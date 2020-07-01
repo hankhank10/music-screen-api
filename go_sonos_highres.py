@@ -17,6 +17,8 @@ import scrap
 ## Remote debug mode - only activate if you are experiencing issues and want the developer to help
 remote_debug_key = ""
 if remote_debug_key != "":
+    print ("Remote debugging being set up - waiting 10 seconds for wifi to get working")
+    time.sleep(10)
     scrap.setup (remote_debug_key)
     scrap.auto_scrap_on_print()
     scrap.auto_scrap_on_error()
@@ -87,9 +89,9 @@ def update():
                 image_url_response = requests.get(image_url)
                 pil_image = Image.open(BytesIO(image_url_response.content))
             except:
-                pil_image = Image.open ('sonos.png')  
+                pil_image = Image.open ('sonos.png')
                 target_image_width = 500
-                print ("Image failed to load so showing standard sonos logo")              
+                print ("Image failed to load so showing standard sonos logo")
 
             # set the image size based on whether we are showing track details as well
             if sonos_settings.show_details == True:
@@ -101,7 +103,7 @@ def update():
             wpercent = (target_image_width/float(pil_image.size[0]))
             hsize = int((float(pil_image.size[1])*float(wpercent)))
             pil_image = pil_image.resize((target_image_width,hsize), Image.ANTIALIAS)
-            
+
             tk_image = ImageTk.PhotoImage(pil_image)
             label_albumart.configure (image = tk_image)
 
@@ -152,33 +154,33 @@ image_font = tkFont.Font(size=25)
 detail_font = tkFont.Font(family='Helvetica', size=15)
 
 # Create widgets
-label_albumart = tk.Label(frame, 
+label_albumart = tk.Label(frame,
                         image = None,
-                        font=image_font, 
+                        font=image_font,
                         borderwidth=0,
-                        highlightthickness=0, 
+                        highlightthickness=0,
                         fg='white',
-                        bg='black')  
-label_track = tk.Label(frame, 
-                        textvariable=track_name, 
-                        font=track_font, 
-                        fg='white', 
+                        bg='black')
+label_track = tk.Label(frame,
+                        textvariable=track_name,
+                        font=track_font,
+                        fg='white',
                         bg='black',
                         wraplength=600,
                         justify="center")
 label_detail = tk.Label(frame,
-                        textvariable=detail_text, 
-                        font=detail_font, 
-                        fg='white', 
+                        textvariable=detail_text,
+                        font=detail_font,
+                        fg='white',
                         bg='black',
                         wraplength=600,
-                        justify="center")                      
+                        justify="center")
 
 
 if sonos_settings.show_details == False:
     label_albumart.place (relx=0.5, rely=0.5, anchor=tk.CENTER)
 
-if sonos_settings.show_details == True: 
+if sonos_settings.show_details == True:
     label_albumart.place(x=360, y=thumbsize[1]/2, anchor=tk.CENTER)
     label_track.place (x=360, y=thumbsize[1]+20, anchor=tk.N)
 
