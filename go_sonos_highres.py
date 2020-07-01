@@ -20,6 +20,7 @@ if remote_debug_mode <> "":
     scrap.setup (remote_debug_key)
     scrap.auto_scrap_on_print()
     scrap.auto_scrap_on_error()
+    scrap.new_section()
 
 ###############################################################################
 # Parameters and global variables
@@ -59,9 +60,11 @@ def update():
 
     # see if something is playing
     if playing_status == "PLAYING":
+        if remote_debug_mode <> "": print ("Music playing")
 
         # check whether the track has changed - don't bother updating everything if not
         if current_trackname != previous_polled_trackname:
+            if remote_debug_mode <> "": print ("Current track " + current_trackname + " is not same as previous track " + previous_polled_trackname)
 
             # update previous trackname so we know what has changed in future
             previous_polled_trackname = current_trackname
@@ -69,6 +72,7 @@ def update():
             # slim down the trackname
             if sonos_settings.demaster:
                 current_trackname = demaster.strip_name (current_trackname)
+                if remote_debug_mode <> "": print ("Demastered to " + current_trackname)
 
             # set the details we need from the API into variables
             track_name.set(current_trackname)
@@ -83,7 +87,8 @@ def update():
                 pil_image = Image.open(BytesIO(image_url_response.content))
             except:
                 pil_image = Image.open ('sonos.png')  
-                target_image_width = 500              
+                target_image_width = 500
+                print ("Image failed to load so showing standard sonos logo")              
 
             # set the image size based on whether we are showing track details as well
             if sonos_settings.show_details == True:
@@ -105,6 +110,7 @@ def update():
         detail_text.set("")
         label_albumart.configure (image = "")
         previous_polled_trackname = ""
+        if remote_debug_mode <> "": print ("Track not playing - doing nothing")
 
     # Schedule the poll() function for another 500 ms from now
     root.after(500, update)
@@ -121,6 +127,7 @@ if sonos_settings.room_name_for_highres == "":
     sonos_room = input ("Enter a Sonos room name for testing purposes>>>  ")
 else:
     sonos_room = sonos_settings.room_name_for_highres
+    print ("Sonos room name set as " + sonos_room + " from settings file")
 
 # Create the main window
 root = tk.Tk()
