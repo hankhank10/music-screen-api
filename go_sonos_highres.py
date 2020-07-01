@@ -89,7 +89,7 @@ def update():
                 image_url_response = requests.get(image_url)
                 pil_image = Image.open(BytesIO(image_url_response.content))
             except:
-                pil_image = Image.open ('sonos.png')
+                pil_image = Image.open (sys.path[0] + "/sonos.png")
                 target_image_width = 500
                 print ("Image failed to load so showing standard sonos logo")
 

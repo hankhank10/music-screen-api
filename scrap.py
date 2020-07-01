@@ -5,12 +5,12 @@ import urllib.parse
 import time
 
 api_url = "http://scrap.hankapi.com"
-scrap_key_filename = "scrap_key"
+scrap_key_filename = sys.path[0] + "/scrap_key"
 scrap_version = 6
 
 def get_key_from_file():
     if os.path.isfile(scrap_key_filename):
-        with open ("scrap_key", "r") as f:
+        with open (scrap_key_filename, "r") as f:
             key = f.read()
 
         return key
@@ -38,7 +38,7 @@ def write(text):
             time.sleep(5)
 
 def setup(key):
-    with open ("scrap_key", "w") as f:
+    with open (scrap_key_filename, "w") as f:
         f.write (key)
 
 def new_section():
