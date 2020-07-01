@@ -12,6 +12,14 @@ from io import BytesIO
 from PIL import ImageTk, Image
 import os
 import demaster
+import scrap
+
+## Remote debug mode - only activate if you are experiencing issues and want the developer to help
+remote_debug_key = ""
+if remote_debug_mode <> "":
+    scrap.setup (remote_debug_key)
+    scrap.auto_scrap_on_print()
+    scrap.auto_scrap_on_error()
 
 ###############################################################################
 # Parameters and global variables
