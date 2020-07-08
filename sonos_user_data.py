@@ -51,7 +51,12 @@ def current(sonos_room):
     obj = json.loads(data.text)
 
     # extract relevant data
-    playing_status = obj['playbackState']
+    try:
+        playing_status = obj['playbackState']
+    except KeyError:
+        print ("Error: http-sonos-api object is missing playbackState")
+        time.sleep (10)
+        return "", "", "", "", "API error"
     type_playing = obj['currentTrack']['type']
 
     # detect if its coming from Sonos radio, in which case forget that it's radio and pretend it's a normal track
