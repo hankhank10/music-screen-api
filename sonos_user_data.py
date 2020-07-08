@@ -83,6 +83,11 @@ def current(sonos_room):
             return "", "", "", "", "API error"
         if 'artist' in obj['currentTrack']: current_artist = obj['currentTrack']['artist']
         if 'album' in obj['currentTrack']: current_album = obj['currentTrack']['album']
-        if 'absoluteAlbumArtUri' in obj['currentTrack']: current_image = obj['currentTrack']['absoluteAlbumArtUri']
+
+        album_art_uri = obj['currentTrack'].get('albumArtUri')
+        if album_art_uri and album_art_uri.startswith('http'):
+            current_image = album_art_uri
+        elif 'absoluteAlbumArtUri' in obj['currentTrack']:
+            current_image = obj['currentTrack']['absoluteAlbumArtUri']
 
     return current_trackname, current_artist, current_album, current_image, playing_status
