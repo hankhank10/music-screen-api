@@ -18,7 +18,7 @@ import scrap
 try:
     from rpi_backlight import Backlight
 except ImportError:
-    print ("Backlight control not available, please install the 'rpi_backlight' Python package")
+    print ("Backlight control not available, please install the 'rpi_backlight' Python package: https://github.com/linusg/rpi-backlight#installation")
     backlight = None
 else:
     backlight = Backlight()

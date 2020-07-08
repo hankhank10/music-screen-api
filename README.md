@@ -28,6 +28,19 @@ I have put together step-by-step basic instructions:
 - [e-INK version here](https://www.hackster.io/mark-hank/currently-playing-music-on-e-ink-display-310645)
 - [High res version here](https://www.hackster.io/mark-hank/sonos-album-art-on-raspberry-pi-screen-5b0012)
 
+# Optional backlight control
+
+Thanks to a pull request from [jjlawren](https://github.com/jjlawren) there is now the option to have the backlight of the Hyperpixel turn off when music is not playing.
+
+In order to activate this you need run the following commands:
+```
+pip3 install rpi-backlight
+$ echo 'SUBSYSTEM=="backlight",RUN+="/bin/chmod 666 /sys/class/backlight/%k/brightness /sys/class/backlight/%k/bl_power"' | sudo tee -a /etc/udev/rules.d/backlight-permissions.rules
+
+```
+
+Full instructions here: https://github.com/linusg/rpi-backlight#installation
+
 # Important notice on Pi Zero
 
 The e-ink script can be got running with a Pi Zero, however you will want to note two things:
