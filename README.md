@@ -35,7 +35,7 @@ Thanks to a pull request from [jjlawren](https://github.com/jjlawren) there is n
 In order to activate this you need run the following commands:
 ```
 pip3 install rpi-backlight
-$ echo 'SUBSYSTEM=="backlight",RUN+="/bin/chmod 666 /sys/class/backlight/%k/brightness /sys/class/backlight/%k/bl_power"' | sudo tee -a /etc/udev/rules.d/backlight-permissions.rules
+echo 'SUBSYSTEM=="backlight",RUN+="/bin/chmod 666 /sys/class/backlight/%k/brightness /sys/class/backlight/%k/bl_power"' | sudo tee -a /etc/udev/rules.d/backlight-permissions.rules
 
 ```
 
