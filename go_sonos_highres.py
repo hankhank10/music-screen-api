@@ -41,8 +41,6 @@ if remote_debug_key != "":
 thumbsize = 600,600   # pixel size of thumbnail if you're displaying detail
 screensize = 720,720  # pixel size of HyperPixel 4.0
 fullscreen = True
-#show_details = False   # if set to false then just shows the album art; if set to true then also displays track name + album/artist name
-#show_artist_and_album = True   #if set to true then shows artist and album at the bottom; if false just shows track name; won't do anything if show_detail is false
 
 # Declare global variables (don't mess with these)
 root = None
