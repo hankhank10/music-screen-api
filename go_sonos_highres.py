@@ -9,7 +9,7 @@ import sonos_user_data
 import sonos_settings
 import requests
 from io import BytesIO
-from PIL import ImageTk, Image
+from PIL import ImageTk, Image, ImageFile
 import os
 import demaster
 import scrap
@@ -46,6 +46,8 @@ previous_polled_trackname = ""
 thumbwidth = thumbsize[1]
 screenwidth = screensize[1]
 sonos_room = None
+
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 ###############################################################################
 # Functions
