@@ -1,6 +1,7 @@
 # This file is for use with the Pimoroni HyperPixel 4.0 Square (Non Touch) High Res display
 # it integrates with your local Sonos sytem to display what is currently playing
 
+import atexit
 import tkinter as tk
 import tkinter.font as tkFont
 import time
@@ -13,6 +14,14 @@ from PIL import ImageTk, Image, ImageFile
 import os
 import demaster
 import scrap
+
+try:
+    from rpi_backlight import Backlight
+except ImportError:
+    print ("Backlight control not available, please install the 'rpi_backlight' Python package")
+    backlight = None
+else:
+    backlight = Backlight()
 
 ## Remote debug mode - only activate if you are experiencing issues and want the developer to help
 remote_debug_key = ""
@@ -51,6 +60,18 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 ###############################################################################
 # Functions
+
+def set_backlight_power(new_state):
+    """Control the backlight power of the HyperPixel display."""
+    global backlight
+    if backlight:
+        if new_state is False and backlight.power:
+            if remote_debug_key != "": print("Going idle, turning backlight off")
+        try:
+            backlight.power = new_state
+        except PermissionError:
+            print("Backlight control failed, ensure permissions are correct: https://github.com/linusg/rpi-backlight#installation")
+            backlight = None
 
 # Read values from the sensors at regular intervals
 def update():
@@ -106,6 +127,7 @@ def update():
             hsize = int((float(pil_image.size[1])*float(wpercent)))
             pil_image = pil_image.resize((target_image_width,hsize), Image.ANTIALIAS)
 
+            set_backlight_power(True)
             tk_image = ImageTk.PhotoImage(pil_image)
             label_albumart.configure (image = tk_image)
 
@@ -114,6 +136,7 @@ def update():
         time.sleep (5)
 
     if playing_status != "PLAYING":
+        set_backlight_power(False)
         track_name.set("")
         detail_text.set("")
         label_albumart.configure (image = "")
@@ -136,6 +159,12 @@ if sonos_settings.room_name_for_highres == "":
 else:
     sonos_room = sonos_settings.room_name_for_highres
     print ("Sonos room name set as " + sonos_room + " from settings file")
+
+@atexit.register
+def goodbye():
+    """Clean up when script is exiting."""
+    set_backlight_power(True)
+    print("Exiting")
 
 # Create the main window
 root = tk.Tk()
@@ -202,4 +231,7 @@ root.after(20, update)
 
 # Start in fullscreen mode and run
 root.attributes('-fullscreen', fullscreen)
-root.mainloop()
+try:
+    root.mainloop()
+except KeyboardInterrupt:
+    pass
