@@ -109,7 +109,7 @@ def update():
 
             image_failed_to_load = False
             try:
-                image_url_response = requests.get(image_url)
+                image_url_response = requests.get(image_url, timeout=sonos_user_data.DEFAULT_TIMEOUT)
                 pil_image = Image.open(BytesIO(image_url_response.content))
             except:
                 pil_image = Image.open (sys.path[0] + "/sonos.png")
