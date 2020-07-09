@@ -47,8 +47,9 @@ def strip_name_api(full_song_name):
     print ("Checking API at "+  api_url)
 
     try:
-        r = requests.get(api_url)
-    except requests.ConnectionError:
+        r = requests.get(api_url, timeout=5)
+    except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as err:
+        print ("Error contacting demaster host: " + err)
         short_song_name = "##Error##"
         request_error = True
         
