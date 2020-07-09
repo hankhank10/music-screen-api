@@ -2,10 +2,89 @@
 # if you're looking for that then try sonos_settings.py
 # sorry, I know it's confusingly named - but it's too late to change now!
 
-import requests
-import json
+import aiohttp
 import sonos_settings
-import time
+import urllib.parse
+
+DEFAULT_TIMEOUT = 5
+
+
+class SonosData():
+
+    def __init__(self, sonos_room, session):
+        self.sonos_room = sonos_room
+
+        self.trackname = ""
+        self.artist = ""
+        self.album = ""
+        self.image = ""
+        self.status = ""
+
+        self._data = None
+        self.session = session
+
+    async def refresh(self, payload=None):
+        """Refresh the Sonos media data with provided payload or a new get request."""
+        if payload:
+            obj = payload
+        else:
+            base_url = f"http://{sonos_settings.sonos_http_api_address}:{sonos_settings.sonos_http_api_port}"
+            url = urllib.parse.urljoin(base_url, f"{self.sonos_room}/state")
+
+            try:
+                async with self.session.get(url) as response:
+                    obj = await response.json()
+            except Exception as err:
+                self.status = "API error"
+                print(f"Error connecting to Sonos API: {err}")
+                return
+
+        try:
+            self.status = obj['playbackState']
+        except KeyError:
+            print("Error: http-sonos-api object is missing playbackState")
+            self.status = "API error"
+            return
+
+        type_playing = obj['currentTrack']['type']
+
+        # detect if its coming from Sonos radio, in which case forget that it's radio and pretend it's a normal track
+        uri = obj['currentTrack']['uri']
+        if uri.startswith('x-sonosapi-radio:sonos'):
+            type_playing = "sonos_radio"
+
+        if type_playing == "radio":
+
+            if 'stationName' in obj['currentTrack']:
+                # if Sonos has given us a nice station name then use that
+                self.trackname = obj['currentTrack']['stationName']
+            else:
+                # if not then try to look it up (usually because its played from Alexa)
+                self.trackname = str(find_unknown_radio_station_name(obj['currentTrack']['title']))
+
+            self.artist = ""
+            self.album = ""
+
+            if 'absoluteAlbumArtUri' in obj['currentTrack']:
+                self.image = obj['currentTrack']['absoluteAlbumArtUri']
+            else:
+                self.image = ""
+
+        if type_playing != "radio":
+            try:
+                self.trackname = obj['currentTrack']['title']
+            except:
+                self.status = "API error"
+                return
+            if 'artist' in obj['currentTrack']: self.artist = obj['currentTrack']['artist']
+            if 'album' in obj['currentTrack']: self.album = obj['currentTrack']['album']
+
+            album_art_uri = obj['currentTrack'].get('albumArtUri')
+            if album_art_uri and album_art_uri.startswith('http'):
+                self.image = album_art_uri
+            elif 'absoluteAlbumArtUri' in obj['currentTrack']:
+                self.image = obj['currentTrack']['absoluteAlbumArtUri']
+
 
 DEFAULT_TIMEOUT = 5
 
@@ -26,74 +105,3 @@ def find_unknown_radio_station_name(filename):
 
     # if not found:
     return "Radio"
-
-def current(sonos_room):
-    # reset all the variables so we return a blank if it's not set by the function
-    current_trackname = ""
-    current_artist = ""
-    current_album = ""
-    current_image =""
-    playing_status = ""
-
-    # convert any spaces to url-suitable character
-    sonos_room = sonos_room.replace(" ", "%20")
-
-    # build URL
-    url = "http://" + sonos_settings.sonos_http_api_address + ":" + sonos_settings.sonos_http_api_port + "/" + sonos_room + "/state"
-
-    # download the raw json object and parse the json data
-    try:
-        data = requests.get(url, timeout=DEFAULT_TIMEOUT)
-    except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
-        print ("Error: http-sonos-api failed to answer; pausing 20 seconds to give it a chance to catch up")
-        time.sleep (20)
-        return "", "", "", "", "API error"
-
-    obj = json.loads(data.text)
-
-    # extract relevant data
-    try:
-        playing_status = obj['playbackState']
-    except KeyError:
-        print ("Error: http-sonos-api object is missing playbackState")
-        time.sleep (10)
-        return "", "", "", "", "API error"
-    type_playing = obj['currentTrack']['type']
-
-    # detect if its coming from Sonos radio, in which case forget that it's radio and pretend it's a normal track
-    uri = obj['currentTrack']['uri']
-    if uri.startswith('x-sonosapi-radio:sonos'):
-        type_playing = "sonos_radio"
-
-    if type_playing == "radio":
-            
-        if 'stationName' in obj['currentTrack']:
-            # if Sonos has given us a nice station name then use that
-            current_trackname = obj['currentTrack']['stationName']
-        else:
-            # if not then try to look it up (usually because its played from Alexa)
-            current_trackname = str(find_unknown_radio_station_name(obj['currentTrack']['title']))
-        
-        current_artist = ""
-        current_album = ""
-        
-        if 'absoluteAlbumArtUri' in obj['currentTrack']:
-            current_image = obj['currentTrack']['absoluteAlbumArtUri']
-        else:
-            current_image = ""       
-
-    if type_playing != "radio":
-        try:
-            current_trackname = obj['currentTrack']['title']
-        except:
-            return "", "", "", "", "API error"
-        if 'artist' in obj['currentTrack']: current_artist = obj['currentTrack']['artist']
-        if 'album' in obj['currentTrack']: current_album = obj['currentTrack']['album']
-
-        album_art_uri = obj['currentTrack'].get('albumArtUri')
-        if album_art_uri and album_art_uri.startswith('http'):
-            current_image = album_art_uri
-        elif 'absoluteAlbumArtUri' in obj['currentTrack']:
-            current_image = obj['currentTrack']['absoluteAlbumArtUri']
-
-    return current_trackname, current_artist, current_album, current_image, playing_status
