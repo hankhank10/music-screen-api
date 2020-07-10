@@ -1,8 +1,7 @@
 # This file is for use with the Pimoroni HyperPixel 4.0 Square (Non Touch) High Res display
 # it integrates with your local Sonos sytem to display what is currently playing
 
-import aiohttp
-from aiohttp import web
+from aiohttp import ClientSession, web
 import asyncio
 import signal
 
@@ -234,7 +233,7 @@ async def main(loop):
         sonos_room = sonos_settings.room_name_for_highres
         print ("Sonos room name set as " + sonos_room + " from settings file")
 
-    session = aiohttp.ClientSession()
+    session = ClientSession()
     sonos_data = SonosData(sonos_room, session)
     tk_data = setup_tk()
 
