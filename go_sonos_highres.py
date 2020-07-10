@@ -87,7 +87,6 @@ async def update(session, sonos_data, tk_data):
     await sonos_data.refresh()
 
     if sonos_data.status == "API error":
-        print("API error encountered")
         if remote_debug_key != "": print ("API error reported fyi")
         return
 
