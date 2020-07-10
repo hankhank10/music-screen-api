@@ -2,11 +2,9 @@
 # if you're looking for that then try sonos_settings.py
 # sorry, I know it's confusingly named - but it's too late to change now!
 
-import aiohttp
-import sonos_settings
 import urllib.parse
 
-DEFAULT_TIMEOUT = 5
+import sonos_settings
 
 
 class SonosData():
@@ -81,8 +79,6 @@ class SonosData():
             elif 'absoluteAlbumArtUri' in obj['currentTrack']:
                 self.image = obj['currentTrack']['absoluteAlbumArtUri']
 
-
-DEFAULT_TIMEOUT = 5
 
 def find_unknown_radio_station_name(filename):
     # BBC streams started via alexa don't return their real name, which is annoying... but fixable:
