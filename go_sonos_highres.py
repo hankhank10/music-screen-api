@@ -55,7 +55,7 @@ screensize = 720,720  # pixel size of HyperPixel 4.0
 fullscreen = True
 
 # Declare global variables (don't mess with these)
-previous_polled_trackname = ""
+previous_track = None
 thumbwidth = thumbsize[1]
 screenwidth = screensize[1]
 
@@ -78,7 +78,7 @@ def set_backlight_power(new_state):
 
 # Read values from the sensors at regular intervals
 async def update(session, sonos_data, tk_data):
-    global previous_polled_trackname
+    global previous_track
 
     await sonos_data.refresh()
 
@@ -96,12 +96,13 @@ async def update(session, sonos_data, tk_data):
     if sonos_data.status == "PLAYING":
         if remote_debug_key != "": print ("Music playing")
 
+        checksum = f"{current_trackname}-{current_artist}-{current_album}-{len(current_image)}"
         # check whether the track has changed - don't bother updating everything if not
-        if current_trackname != previous_polled_trackname:
-            if remote_debug_key != "": print ("Current track " + current_trackname + " is not same as previous track " + previous_polled_trackname)
+        if checksum != previous_track:
+            if remote_debug_key != "": print ("Current track " + current_trackname + " is not same as previous track " + previous_track)
 
             # update previous trackname so we know what has changed in future
-            previous_polled_trackname = current_trackname
+            previous_track = checksum
 
             # slim down the trackname
             if sonos_settings.demaster:
@@ -144,7 +145,7 @@ async def update(session, sonos_data, tk_data):
         tk_data.track_name.set("")
         tk_data.detail_text.set("")
         tk_data.label_albumart.configure (image = "")
-        previous_polled_trackname = ""
+        previous_track = None
         if remote_debug_key != "": print ("Track not playing - doing nothing")
 
     tk_data.root.update()
