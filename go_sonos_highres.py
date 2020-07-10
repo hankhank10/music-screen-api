@@ -55,6 +55,7 @@ screensize = 720,720  # pixel size of HyperPixel 4.0
 fullscreen = True
 
 # Declare global variables (don't mess with these)
+last_update_timestamp = 0
 previous_track = None
 thumbwidth = thumbsize[1]
 screenwidth = screensize[1]
@@ -78,7 +79,10 @@ def set_backlight_power(new_state):
 
 # Read values from the sensors at regular intervals
 async def update(session, sonos_data, tk_data):
+    global last_update_timestamp
     global previous_track
+
+    last_update_timestamp = time.time()
 
     await sonos_data.refresh()
 
@@ -214,11 +218,13 @@ def setup_tk():
 
     # Start in fullscreen mode
     root.attributes('-fullscreen', fullscreen)
+    root.update()
 
     return TkData(root, detail_text, label_albumart, track_name)
 
 
 async def main(loop):
+    global last_update_timestamp
     if sonos_settings.room_name_for_highres == "":
         print ("No room name found in sonos_settings.py")
         print ("You can specify a room name manually below")
@@ -253,8 +259,9 @@ async def main(loop):
         loop.add_signal_handler(getattr(signal, signame), lambda: asyncio.ensure_future(cleanup(loop, runner, session)))
 
     while True:
-        await update(session, sonos_data, tk_data)
-        await asyncio.sleep(60)
+        if time.time() - last_update_timestamp > 30:
+            await update(session, sonos_data, tk_data)
+        await asyncio.sleep(1)
 
 async def cleanup(loop, runner, session):
     set_backlight_power(True)
