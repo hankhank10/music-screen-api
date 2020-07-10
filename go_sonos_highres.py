@@ -101,46 +101,46 @@ async def update(session, sonos_data, tk_data):
 
         checksum = f"{current_trackname}-{current_artist}-{current_album}-{current_image_url}"
         # check whether the track has changed - don't bother updating everything if not
-        if checksum != previous_track:
-            if remote_debug_key != "": print ("Current track " + current_trackname + " is not same as previous track " + previous_track)
+        if checksum == previous_track:
+            return
 
-            # update previous trackname so we know what has changed in future
-            previous_track = checksum
+        if remote_debug_key != "": print ("Current track " + current_trackname + " is not same as previous track " + previous_track)
 
-            # slim down the trackname
-            if sonos_settings.demaster:
-                current_trackname = demaster.strip_name (current_trackname)
-                if remote_debug_key != "": print ("Demastered to " + current_trackname)
+        # update previous trackname so we know what has changed in future
+        previous_track = checksum
 
-            # set the details we need from the API into variables
-            tk_data.track_name.set(current_trackname)
-            tk_data.detail_text.set(current_artist + " • "+ current_album)
+        # slim down the trackname
+        if sonos_settings.demaster:
+            current_trackname = demaster.strip_name (current_trackname)
+            if remote_debug_key != "": print ("Demastered to " + current_trackname)
 
-            try:
-                async with session.get(current_image_url) as response:
-                    image_url_response = await response.read()
-                pil_image = Image.open(BytesIO(image_url_response))
-            except:
-                pil_image = Image.open (sys.path[0] + "/sonos.png")
-                target_image_width = 500
-                print ("Image failed to load so showing standard sonos logo")
+        # set the details we need from the API into variables
+        tk_data.track_name.set(current_trackname)
+        tk_data.detail_text.set(current_artist + " • "+ current_album)
 
-            # set the image size based on whether we are showing track details as well
-            if sonos_settings.show_details == True:
-                target_image_width = thumbwidth
-            else:
-                target_image_width = screenwidth
+        try:
+            async with session.get(current_image_url) as response:
+                image_url_response = await response.read()
+            pil_image = Image.open(BytesIO(image_url_response))
+        except:
+            pil_image = Image.open (sys.path[0] + "/sonos.png")
+            target_image_width = 500
+            print ("Image failed to load so showing standard sonos logo")
 
-            # resize the image
-            wpercent = (target_image_width/float(pil_image.size[0]))
-            hsize = int((float(pil_image.size[1])*float(wpercent)))
-            pil_image = pil_image.resize((target_image_width,hsize), Image.ANTIALIAS)
+        # set the image size based on whether we are showing track details as well
+        if sonos_settings.show_details == True:
+            target_image_width = thumbwidth
+        else:
+            target_image_width = screenwidth
 
-            set_backlight_power(True)
-            tk_image = ImageTk.PhotoImage(pil_image)
-            tk_data.label_albumart.configure (image = tk_image)
-            tk_data.root.update()
+        # resize the image
+        wpercent = (target_image_width/float(pil_image.size[0]))
+        hsize = int((float(pil_image.size[1])*float(wpercent)))
+        pil_image = pil_image.resize((target_image_width,hsize), Image.ANTIALIAS)
 
+        set_backlight_power(True)
+        tk_image = ImageTk.PhotoImage(pil_image)
+        tk_data.label_albumart.configure (image = tk_image)
     else:
         set_backlight_power(False)
         tk_data.track_name.set("")
@@ -148,7 +148,8 @@ async def update(session, sonos_data, tk_data):
         tk_data.label_albumart.configure (image = "")
         previous_track = None
         if remote_debug_key != "": print ("Track not playing - doing nothing")
-        tk_data.root.update()
+
+    tk_data.root.update()
 
 
 def setup_tk():
