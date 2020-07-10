@@ -4,6 +4,7 @@
 import aiohttp
 from aiohttp import web
 import asyncio
+import signal
 
 import tkinter as tk
 import tkinter.font as tkFont
@@ -247,18 +248,27 @@ async def main(loop):
     site = web.TCPSite(runner, 'localhost', 8080)
     await site.start()
 
+    for signame in ('SIGINT', 'SIGTERM', 'SIGQUIT'):
+        loop.add_signal_handler(getattr(signal, signame), lambda: asyncio.ensure_future(cleanup(loop, runner, session)))
+
     while True:
         await update(session, sonos_data, tk_data)
         await asyncio.sleep(60)
 
-    print("Exiting loop!")
-    await runner.cleanup()
+async def cleanup(loop, runner, session):
     set_backlight_power(True)
+    await session.close()
+    await runner.cleanup()
 
+    tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
+    [task.cancel() for task in tasks]
+    await asyncio.gather(*tasks, return_exceptions=True)
+    loop.stop()
 
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     try:
-        loop.run_until_complete(main(loop))
-    except KeyboardInterrupt:
-        loop.stop()
+        loop.create_task(main(loop))
+        loop.run_forever()
+    finally:
+        loop.close()
