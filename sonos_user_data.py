@@ -71,13 +71,9 @@ class SonosData():
                 self.image = ""
 
         if type_playing != "radio":
-            try:
-                self.trackname = obj['currentTrack']['title']
-            except:
-                self.status = "API error"
-                return
-            if 'artist' in obj['currentTrack']: self.artist = obj['currentTrack']['artist']
-            if 'album' in obj['currentTrack']: self.album = obj['currentTrack']['album']
+            self.trackname = obj['currentTrack'].get('title', "")
+            self.artist = obj['currentTrack'].get('artist', "")
+            self.album = obj['currentTrack'].get('album', "")
 
             album_art_uri = obj['currentTrack'].get('albumArtUri')
             if album_art_uri and album_art_uri.startswith('http'):
