@@ -143,6 +143,7 @@ async def update(session, sonos_data, tk_data):
             set_backlight_power(True)
             tk_image = ImageTk.PhotoImage(pil_image)
             tk_data.label_albumart.configure (image = tk_image)
+            tk_data.root.update()
 
     else:
         set_backlight_power(False)
@@ -151,8 +152,8 @@ async def update(session, sonos_data, tk_data):
         tk_data.label_albumart.configure (image = "")
         previous_track = None
         if remote_debug_key != "": print ("Track not playing - doing nothing")
+        tk_data.root.update()
 
-    tk_data.root.update()
 
 def setup_tk():
     """Create the main Tk window."""
