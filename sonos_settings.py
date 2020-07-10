@@ -7,6 +7,12 @@ sonos_http_api_port = "5005"
 
 demaster = True #crop song names to remove nonsense such as "Remastered" or "live at"
 
+## Webhook update support
+use_webhook = False
+# Set to True to use sonos-http-api webhooks to update on activity instead of polling.
+# Must update your sonos-http-api settings.json file to include: { "webhook": "http://localhost:8080/" }
+# If running sonos-http-api on a different machine, this device's IP should be used instead of 'localhost'.
+
 ## High-res only settings
 room_name_for_highres = ""   # the go_sonos_highres.py file cannot be reliably passed multi-word arguments on startup, so the room is defined here instead
 show_details = False   # if set to False then just shows the album art; if set to true then also displays track name + album/artist name

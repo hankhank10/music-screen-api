@@ -246,24 +246,31 @@ async def main(loop):
                 await update(session, sonos_data, tk_data)
         return web.Response(text="hello")
 
-    server = web.Server(webhook)
-    runner = web.ServerRunner(server)
-    await runner.setup()
-    site = web.TCPSite(runner, 'localhost', 8080)
-    await site.start()
+    if sonos_settings.use_webhook:
+        FORCED_UPDATE_INTERVAL = 30
+        server = web.Server(webhook)
+        runner = web.ServerRunner(server)
+        await runner.setup()
+        site = web.TCPSite(runner, 'localhost', 8080)
+        await site.start()
+        print("Webhook support enabled")
+    else:
+        FORCED_UPDATE_INTERVAL = 1
+        runner = None
 
     for signame in ('SIGINT', 'SIGTERM', 'SIGQUIT'):
         loop.add_signal_handler(getattr(signal, signame), lambda: asyncio.ensure_future(cleanup(loop, runner, session)))
 
     while True:
-        if time.time() - last_update_timestamp > 30:
+        if time.time() - last_update_timestamp > FORCED_UPDATE_INTERVAL:
             await update(session, sonos_data, tk_data)
         await asyncio.sleep(1)
 
 async def cleanup(loop, runner, session):
     set_backlight_power(True)
     await session.close()
-    await runner.cleanup()
+    if runner:
+        await runner.cleanup()
 
     tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
     [task.cancel() for task in tasks]
