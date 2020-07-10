@@ -93,13 +93,13 @@ async def update(session, sonos_data, tk_data):
     current_trackname = sonos_data.trackname
     current_artist = sonos_data.artist
     current_album = sonos_data.album
-    current_image = sonos_data.image
+    current_image_url = sonos_data.image
 
     # see if something is playing
     if sonos_data.status == "PLAYING":
         if remote_debug_key != "": print ("Music playing")
 
-        checksum = f"{current_trackname}-{current_artist}-{current_album}-{len(current_image)}"
+        checksum = f"{current_trackname}-{current_artist}-{current_album}-{current_image_url}"
         # check whether the track has changed - don't bother updating everything if not
         if checksum != previous_track:
             if remote_debug_key != "": print ("Current track " + current_trackname + " is not same as previous track " + previous_track)
@@ -116,11 +116,8 @@ async def update(session, sonos_data, tk_data):
             tk_data.track_name.set(current_trackname)
             tk_data.detail_text.set(current_artist + " • "+ current_album)
 
-            # pull the image from the uri provided
-            image_url = current_image
-
             try:
-                async with session.get(image_url) as response:
+                async with session.get(current_image_url) as response:
                     image_url_response = await response.read()
                 pil_image = Image.open(BytesIO(image_url_response))
             except:
