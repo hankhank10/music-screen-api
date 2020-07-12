@@ -2,15 +2,24 @@
 # if you're looking for that then try sonos_settings.py
 # sorry, I know it's confusingly named - but it's too late to change now!
 
-import urllib.parse
+import time
+from urllib.parse import urljoin
 
 import sonos_settings
 
+WEBHOOK_TIMEOUT = 600   # 10 minutes
+
 
 class SonosData():
+    """Holds all data related to the chosen Sonos speaker."""
 
     def __init__(self, sonos_room, session):
-        self.sonos_room = sonos_room
+        """Initialize the object."""
+        self.last_poll = 0
+        self.last_webhook = 0
+        self.session = session
+        self.room = sonos_room
+        self.webhook_active = False
 
         self.trackname = ""
         self.artist = ""
@@ -18,16 +27,18 @@ class SonosData():
         self.image = ""
         self.status = ""
 
-        self._data = None
-        self.session = session
-
     async def refresh(self, payload=None):
         """Refresh the Sonos media data with provided payload or a new get request."""
         if payload:
+            if not self.webhook_active:
+                print("Switching to webhook updates")
+            self.last_webhook = time.time()
+            self.webhook_active = True
             obj = payload
         else:
+            self.last_poll = time.time()
             base_url = f"http://{sonos_settings.sonos_http_api_address}:{sonos_settings.sonos_http_api_port}"
-            url = urllib.parse.urljoin(base_url, f"{self.sonos_room}/state")
+            url = urljoin(base_url, f"{self.room}/state")
 
             try:
                 async with self.session.get(url) as response:
@@ -43,6 +54,11 @@ class SonosData():
             print("Error: http-sonos-api object is missing playbackState")
             self.status = "API error"
             return
+
+        if self.status == "PLAYING" and self.webhook_active:
+            if self.last_poll - self.last_webhook > WEBHOOK_TIMEOUT:
+                print("Webhook activity timed out, falling back to polling")
+                self.webhook_active = False
 
         type_playing = obj['currentTrack']['type']
 

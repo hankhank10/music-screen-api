@@ -1,7 +1,7 @@
 # This file is for use with the Pimoroni HyperPixel 4.0 Square (Non Touch) High Res display
 # it integrates with your local Sonos sytem to display what is currently playing
 
-from aiohttp import ClientSession, web
+from aiohttp import ClientSession
 import asyncio
 import signal
 
@@ -15,6 +15,7 @@ from io import BytesIO
 from PIL import ImageTk, Image, ImageFile
 import demaster
 import scrap
+from webhook_handler import SonosWebhook
 
 try:
     from rpi_backlight import Backlight
@@ -237,40 +238,26 @@ async def main(loop):
     sonos_data = SonosData(sonos_room, session)
     tk_data = setup_tk()
 
-    async def webhook(request):
-        """Handle a webhook received from node-sonos-http-api."""
-        json = await request.json()
-        if json['type'] == 'transport-state':
-            if json['data']['roomName'] == sonos_room:
-                await sonos_data.refresh(json['data']['state'])
-                await update(session, sonos_data, tk_data)
-        return web.Response(text="hello")
-
-    if sonos_settings.use_webhook:
-        FORCED_UPDATE_INTERVAL = 30
-        server = web.Server(webhook)
-        runner = web.ServerRunner(server)
-        await runner.setup()
-        site = web.TCPSite(runner, 'localhost', 8080)
-        await site.start()
-        print("Webhook support enabled")
-    else:
-        FORCED_UPDATE_INTERVAL = 1
-        runner = None
+    webhook = SonosWebhook(sonos_data)
+    await webhook.listen()
 
     for signame in ('SIGINT', 'SIGTERM', 'SIGQUIT'):
-        loop.add_signal_handler(getattr(signal, signame), lambda: asyncio.ensure_future(cleanup(loop, runner, session)))
+        loop.add_signal_handler(getattr(signal, signame), lambda: asyncio.ensure_future(cleanup(loop, session, webhook)))
 
     while True:
-        if time.time() - last_update_timestamp > FORCED_UPDATE_INTERVAL:
+        if sonos_data.webhook_active:
+            update_interval = 60
+        else:
+            update_interval = 1
+
+        if time.time() - last_update_timestamp > update_interval:
             await update(session, sonos_data, tk_data)
         await asyncio.sleep(1)
 
-async def cleanup(loop, runner, session):
+async def cleanup(loop, session, webhook):
     set_backlight_power(True)
     await session.close()
-    if runner:
-        await runner.cleanup()
+    await webhook.stop()
 
     tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
     [task.cancel() for task in tasks]
