@@ -78,13 +78,8 @@ class SonosData():
 
             self.artist = ""
             self.album = ""
-
-            if 'absoluteAlbumArtUri' in obj['currentTrack']:
-                self.image = obj['currentTrack']['absoluteAlbumArtUri']
-            else:
-                self.image = ""
-
-        if type_playing != "radio":
+            self.image = obj['currentTrack'].get('absoluteAlbumArtUri', "")
+        else:
             self.trackname = obj['currentTrack'].get('title', "")
             self.artist = obj['currentTrack'].get('artist', "")
             self.album = obj['currentTrack'].get('album', "")
@@ -92,8 +87,8 @@ class SonosData():
             album_art_uri = obj['currentTrack'].get('albumArtUri')
             if album_art_uri and album_art_uri.startswith('http'):
                 self.image = album_art_uri
-            elif 'absoluteAlbumArtUri' in obj['currentTrack']:
-                self.image = obj['currentTrack']['absoluteAlbumArtUri']
+            else:
+                self.image = obj['currentTrack'].get('absoluteAlbumArtUri', "")
 
 
 def find_unknown_radio_station_name(filename):
