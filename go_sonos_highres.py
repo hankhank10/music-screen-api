@@ -1,19 +1,24 @@
-# This file is for use with the Pimoroni HyperPixel 4.0 Square (Non Touch) High Res display
-# it integrates with your local Sonos sytem to display what is currently playing
+"""
+This file is for use with the Pimoroni HyperPixel 4.0 Square (Non Touch) High Res display
+it integrates with your local Sonos sytem to display what is currently playing
+"""
 
-import atexit
-import tkinter as tk
-import tkinter.font as tkFont
-import time
+import asyncio
+import signal
 import sys
-import sonos_user_data
-import sonos_settings
-import requests
+import time
+import tkinter as tk
 from io import BytesIO
-from PIL import ImageTk, Image, ImageFile
-import os
+from tkinter import font as tkFont
+
+from aiohttp import ClientSession
+from PIL import Image, ImageFile, ImageTk
+
 import demaster
 import scrap
+import sonos_settings
+from sonos_user_data import SonosData
+from webhook_handler import SonosWebhook
 
 try:
     from rpi_backlight import Backlight
@@ -22,6 +27,17 @@ except ImportError:
     backlight = None
 else:
     backlight = Backlight()
+
+
+class TkData():
+
+    def __init__(self, root, detail_text, label_albumart, track_name):
+        """Initialize the object."""
+        self.root = root
+        self.detail_text = detail_text
+        self.label_albumart = label_albumart
+        self.track_name = track_name
+
 
 ## Remote debug mode - only activate if you are experiencing issues and want the developer to help
 remote_debug_key = ""
@@ -41,18 +57,11 @@ if remote_debug_key != "":
 thumbsize = 600,600   # pixel size of thumbnail if you're displaying detail
 screensize = 720,720  # pixel size of HyperPixel 4.0
 fullscreen = True
-
-# Declare global variables (don't mess with these)
-root = None
-frame = None
-track_name = None
-detail_text = None
-tk_image = None
-font_size = 0
-previous_polled_trackname = ""
 thumbwidth = thumbsize[1]
 screenwidth = screensize[1]
-sonos_room = None
+
+POLLING_INTERVAL = 1
+WEBHOOK_INTERVAL = 60
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
@@ -71,98 +80,66 @@ def set_backlight_power(new_state):
             print("Backlight control failed, ensure permissions are correct: https://github.com/linusg/rpi-backlight#installation")
             backlight = None
 
-# Read values from the sensors at regular intervals
-def update():
+async def redraw(session, sonos_data, tk_data):
+    """Redraw the screen with current data."""
+    if sonos_data.status == "API error":
+        if remote_debug_key != "": print ("API error reported fyi")
+        return
 
-    global root
-    global track_name
-    global tk_image
-    global previous_polled_trackname
-
-    # Get sonos data from API
-    current_trackname, current_artist, current_album, current_image, playing_status = sonos_user_data.current(sonos_room)
+    current_artist = sonos_data.artist
+    current_album = sonos_data.album
+    current_duration = sonos_data.duration
+    current_image_url = sonos_data.image
+    current_trackname = sonos_data.trackname
 
     # see if something is playing
-    if playing_status == "PLAYING":
+    if sonos_data.status == "PLAYING":
         if remote_debug_key != "": print ("Music playing")
 
-        # check whether the track has changed - don't bother updating everything if not
-        if current_trackname != previous_polled_trackname:
-            if remote_debug_key != "": print ("Current track " + current_trackname + " is not same as previous track " + previous_polled_trackname)
+        if not sonos_data.is_track_new():
+            return
 
-            # update previous trackname so we know what has changed in future
-            previous_polled_trackname = current_trackname
+        # slim down the trackname
+        if sonos_settings.demaster:
+            current_trackname = demaster.strip_name (current_trackname)
+            if remote_debug_key != "": print ("Demastered to " + current_trackname)
 
-            # slim down the trackname
-            if sonos_settings.demaster:
-                current_trackname = demaster.strip_name (current_trackname)
-                if remote_debug_key != "": print ("Demastered to " + current_trackname)
+        # set the details we need from the API into variables
+        tk_data.track_name.set(current_trackname)
+        tk_data.detail_text.set(current_artist + " • "+ current_album)
 
-            # set the details we need from the API into variables
-            track_name.set(current_trackname)
-            detail_text.set(current_artist + " • "+ current_album)
+        try:
+            async with session.get(current_image_url) as response:
+                image_url_response = await response.read()
+            pil_image = Image.open(BytesIO(image_url_response))
+        except:
+            pil_image = Image.open (sys.path[0] + "/sonos.png")
+            target_image_width = 500
+            print ("Image failed to load so showing standard sonos logo")
 
-            # pull the image from the uri provided
-            image_url = current_image
+        # set the image size based on whether we are showing track details as well
+        if sonos_settings.show_details == True:
+            target_image_width = thumbwidth
+        else:
+            target_image_width = screenwidth
 
-            image_failed_to_load = False
-            try:
-                image_url_response = requests.get(image_url, timeout=sonos_user_data.DEFAULT_TIMEOUT)
-                pil_image = Image.open(BytesIO(image_url_response.content))
-            except:
-                pil_image = Image.open (sys.path[0] + "/sonos.png")
-                target_image_width = 500
-                print ("Image failed to load so showing standard sonos logo")
+        # resize the image
+        wpercent = (target_image_width/float(pil_image.size[0]))
+        hsize = int((float(pil_image.size[1])*float(wpercent)))
+        pil_image = pil_image.resize((target_image_width,hsize), Image.ANTIALIAS)
 
-            # set the image size based on whether we are showing track details as well
-            if sonos_settings.show_details == True:
-                target_image_width = thumbwidth
-            else:
-                target_image_width = screenwidth
-
-            # resize the image
-            wpercent = (target_image_width/float(pil_image.size[0]))
-            hsize = int((float(pil_image.size[1])*float(wpercent)))
-            pil_image = pil_image.resize((target_image_width,hsize), Image.ANTIALIAS)
-
-            set_backlight_power(True)
-            tk_image = ImageTk.PhotoImage(pil_image)
-            label_albumart.configure (image = tk_image)
-
-    if playing_status == "API error":
-        if remote_debug_key != "": print ("API error reported fyi")
-        time.sleep (5)
-
-    if playing_status != "PLAYING":
+        set_backlight_power(True)
+        tk_image = ImageTk.PhotoImage(pil_image)
+        tk_data.label_albumart.configure (image = tk_image)
+    else:
         set_backlight_power(False)
-        track_name.set("")
-        detail_text.set("")
-        label_albumart.configure (image = "")
-        previous_polled_trackname = ""
+        tk_data.track_name.set("")
+        tk_data.detail_text.set("")
+        tk_data.label_albumart.configure (image = "")
         if remote_debug_key != "": print ("Track not playing - doing nothing")
 
-    # Schedule the poll() function for another 500 ms from now
-    root.after(500, update)
+    tk_data.root.update()
 
-###############################################################################
-# Main script
-
-if sonos_settings.room_name_for_highres == "":
-    print ("No room name found in sonos_settings.py")
-    print ("You can specify a room name manually below")
-    print ("Note: manual entry works for testing purposes, but if you want this to run automatically on startup then you should specify a room name in sonos_settings.py")
-    print ("You can edit the file with the command: nano sonos_settings.py")
-    print ("")
-    sonos_room = input ("Enter a Sonos room name for testing purposes>>>  ")
-else:
-    sonos_room = sonos_settings.room_name_for_highres
-    print ("Sonos room name set as " + sonos_room + " from settings file")
-
-@atexit.register
-def goodbye():
-    """Clean up when script is exiting."""
-    set_backlight_power(True)
-    print("Exiting")
 
 # Create the main window
 root = tk.Tk()
@@ -224,12 +201,63 @@ if sonos_settings.show_details == True:
 
 frame.grid_propagate(False)
 
-# Schedule the poll() function to be called periodically
-root.after(20, update)
-
-# Start in fullscreen mode and run
+# Start in fullscreen mode
 root.attributes('-fullscreen', fullscreen)
-try:
-    root.mainloop()
-except KeyboardInterrupt:
-    pass
+root.update()
+
+tk_data = TkData(root, detail_text, label_albumart, track_name)
+
+
+async def main(loop):
+    if sonos_settings.room_name_for_highres == "":
+        print ("No room name found in sonos_settings.py")
+        print ("You can specify a room name manually below")
+        print ("Note: manual entry works for testing purposes, but if you want this to run automatically on startup then you should specify a room name in sonos_settings.py")
+        print ("You can edit the file with the command: nano sonos_settings.py")
+        print ("")
+        sonos_room = input ("Enter a Sonos room name for testing purposes>>>  ")
+    else:
+        sonos_room = sonos_settings.room_name_for_highres
+        print ("Sonos room name set as " + sonos_room + " from settings file")
+
+    session = ClientSession()
+    sonos_data = SonosData(sonos_room, session)
+
+    async def webhook_callback():
+        """Callback to trigger after webhook is processed."""
+        await redraw(session, sonos_data, tk_data)
+
+    webhook = SonosWebhook(sonos_data, webhook_callback)
+    await webhook.listen()
+
+    for signame in ('SIGINT', 'SIGTERM', 'SIGQUIT'):
+        loop.add_signal_handler(getattr(signal, signame), lambda: asyncio.ensure_future(cleanup(loop, session, webhook)))
+
+    while True:
+        if sonos_data.webhook_active:
+            update_interval = WEBHOOK_INTERVAL
+        else:
+            update_interval = POLLING_INTERVAL
+
+        if time.time() - sonos_data.last_update > update_interval:
+            await sonos_data.refresh()
+            await redraw(session, sonos_data, tk_data)
+        await asyncio.sleep(1)
+
+async def cleanup(loop, session, webhook):
+    set_backlight_power(True)
+    await session.close()
+    await webhook.stop()
+
+    tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
+    [task.cancel() for task in tasks]
+    await asyncio.gather(*tasks, return_exceptions=True)
+    loop.stop()
+
+if __name__ == '__main__':
+    loop = asyncio.get_event_loop()
+    try:
+        loop.create_task(main(loop))
+        loop.run_forever()
+    finally:
+        loop.close()
