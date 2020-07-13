@@ -55,10 +55,12 @@ screensize = 720,720  # pixel size of HyperPixel 4.0
 fullscreen = True
 
 # Declare global variables (don't mess with these)
-last_update_timestamp = 0
 previous_track = None
 thumbwidth = thumbsize[1]
 screenwidth = screensize[1]
+
+POLLING_INTERVAL = 1
+WEBHOOK_INTERVAL = 60
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
@@ -79,10 +81,7 @@ def set_backlight_power(new_state):
 
 async def redraw(session, sonos_data, tk_data):
     """Redraw the screen with current data."""
-    global last_update_timestamp
     global previous_track
-
-    last_update_timestamp = time.time()
 
     if sonos_data.status == "API error":
         if remote_debug_key != "": print ("API error reported fyi")
@@ -218,7 +217,6 @@ tk_data = TkData(root, detail_text, label_albumart, track_name)
 
 
 async def main(loop):
-    global last_update_timestamp
     if sonos_settings.room_name_for_highres == "":
         print ("No room name found in sonos_settings.py")
         print ("You can specify a room name manually below")
@@ -245,11 +243,11 @@ async def main(loop):
 
     while True:
         if sonos_data.webhook_active:
-            update_interval = 60
+            update_interval = WEBHOOK_INTERVAL
         else:
-            update_interval = 1
+            update_interval = POLLING_INTERVAL
 
-        if time.time() - last_update_timestamp > update_interval:
+        if time.time() - sonos_data.last_update > update_interval:
             await sonos_data.refresh()
             await redraw(session, sonos_data, tk_data)
         await asyncio.sleep(1)

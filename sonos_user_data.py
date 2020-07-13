@@ -7,7 +7,7 @@ from urllib.parse import urljoin
 
 import sonos_settings
 
-WEBHOOK_TIMEOUT = 600   # 10 minutes
+WEBHOOK_TIMEOUT = 130
 
 
 class SonosData():
@@ -26,6 +26,12 @@ class SonosData():
         self.album = ""
         self.image = ""
         self.status = ""
+
+    @property
+    def last_update(self):
+        if self.last_webhook > self.last_poll:
+            return self.last_webhook
+        return self.last_poll
 
     async def refresh(self, payload=None):
         """Refresh the Sonos media data with provided payload or a new get request."""
