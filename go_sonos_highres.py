@@ -3,20 +3,21 @@ This file is for use with the Pimoroni HyperPixel 4.0 Square (Non Touch) High Re
 it integrates with your local Sonos sytem to display what is currently playing
 """
 
-from aiohttp import ClientSession
 import asyncio
 import signal
-
-import tkinter as tk
-import tkinter.font as tkFont
-import time
 import sys
-from sonos_user_data import SonosData
-import sonos_settings
+import time
+import tkinter as tk
 from io import BytesIO
-from PIL import ImageTk, Image, ImageFile
+from tkinter import font as tkFont
+
+from aiohttp import ClientSession
+from PIL import Image, ImageFile, ImageTk
+
 import demaster
 import scrap
+import sonos_settings
+from sonos_user_data import SonosData
 from webhook_handler import SonosWebhook
 
 try:

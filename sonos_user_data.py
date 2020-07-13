@@ -17,9 +17,9 @@ class SonosData():
         """Initialize the object."""
         self.last_poll = 0
         self.last_webhook = 0
-        self.session = session
         self.previous_track = None
         self.room = sonos_room
+        self.session = session
         self.webhook_active = False
 
         self.trackname = ""
