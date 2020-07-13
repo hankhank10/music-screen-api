@@ -53,9 +53,6 @@ if remote_debug_key != "":
 thumbsize = 600,600   # pixel size of thumbnail if you're displaying detail
 screensize = 720,720  # pixel size of HyperPixel 4.0
 fullscreen = True
-
-# Declare global variables (don't mess with these)
-previous_track = None
 thumbwidth = thumbsize[1]
 screenwidth = screensize[1]
 
@@ -81,30 +78,29 @@ def set_backlight_power(new_state):
 
 async def redraw(session, sonos_data, tk_data):
     """Redraw the screen with current data."""
-    global previous_track
-
     if sonos_data.status == "API error":
         if remote_debug_key != "": print ("API error reported fyi")
         return
 
-    current_trackname = sonos_data.trackname
     current_artist = sonos_data.artist
     current_album = sonos_data.album
+    current_duration = sonos_data.duration
     current_image_url = sonos_data.image
+    current_trackname = sonos_data.trackname
 
     # see if something is playing
     if sonos_data.status == "PLAYING":
         if remote_debug_key != "": print ("Music playing")
 
-        checksum = f"{current_trackname}-{current_artist}-{current_album}-{current_image_url}"
         # check whether the track has changed - don't bother updating everything if not
-        if checksum == previous_track:
+        new_track_id = f"{current_trackname}|{current_artist}|{current_album}|{current_duration}"
+        if new_track_id == sonos_data.previous_track:
             return
 
-        if remote_debug_key != "": print ("Current track " + current_trackname + " is not same as previous track " + previous_track)
+        if remote_debug_key != "": print ("Current track " + new_track_id + " is not same as previous track " + sonos_data.previous_track)
 
         # update previous trackname so we know what has changed in future
-        previous_track = checksum
+        sonos_data.previous_track = new_track_id
 
         # slim down the trackname
         if sonos_settings.demaster:
@@ -143,7 +139,7 @@ async def redraw(session, sonos_data, tk_data):
         tk_data.track_name.set("")
         tk_data.detail_text.set("")
         tk_data.label_albumart.configure (image = "")
-        previous_track = None
+        sonos_data.previous_track = None
         if remote_debug_key != "": print ("Track not playing - doing nothing")
 
     tk_data.root.update()

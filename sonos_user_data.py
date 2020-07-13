@@ -18,6 +18,7 @@ class SonosData():
         self.last_poll = 0
         self.last_webhook = 0
         self.session = session
+        self.previous_track = None
         self.room = sonos_room
         self.webhook_active = False
 
@@ -67,6 +68,7 @@ class SonosData():
                 self.webhook_active = False
 
         type_playing = obj['currentTrack']['type']
+        self.duration = obj['currentTrack']['duration']
 
         # detect if its coming from Sonos radio, in which case forget that it's radio and pretend it's a normal track
         uri = obj['currentTrack']['uri']
