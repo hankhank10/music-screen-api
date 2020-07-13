@@ -1,5 +1,7 @@
-# This file is for use with the Pimoroni HyperPixel 4.0 Square (Non Touch) High Res display
-# it integrates with your local Sonos sytem to display what is currently playing
+"""
+This file is for use with the Pimoroni HyperPixel 4.0 Square (Non Touch) High Res display
+it integrates with your local Sonos sytem to display what is currently playing
+"""
 
 from aiohttp import ClientSession
 import asyncio
@@ -29,6 +31,7 @@ else:
 class TkData():
 
     def __init__(self, root, detail_text, label_albumart, track_name):
+        """Initialize the object."""
         self.root = root
         self.detail_text = detail_text
         self.label_albumart = label_albumart
