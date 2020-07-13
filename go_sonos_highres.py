@@ -92,6 +92,10 @@ async def redraw(session, sonos_data, tk_data):
     if sonos_data.status == "PLAYING":
         if remote_debug_key != "": print ("Music playing")
 
+        # Ignore update if all data is empty
+        if not any([current_album, current_artist, current_duration, current_trackname]):
+            return
+
         # check whether the track has changed - don't bother updating everything if not
         new_track_id = f"{current_trackname}|{current_artist}|{current_album}|{current_duration}"
         if new_track_id == sonos_data.previous_track:
