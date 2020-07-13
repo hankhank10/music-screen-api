@@ -152,73 +152,71 @@ async def update(session, sonos_data, tk_data):
     tk_data.root.update()
 
 
-def setup_tk():
-    """Create the main Tk window."""
-    # Create the main window
-    root = tk.Tk()
-    root.geometry("720x720")
-    root.title("Music Display")
+# Create the main window
+root = tk.Tk()
+root.geometry("720x720")
+root.title("Music Display")
 
-    # Create the main container
-    frame = tk.Frame(root, bg='black', width=720, height=720)
+# Create the main container
+frame = tk.Frame(root, bg='black', width=720, height=720)
 
-    # Lay out the main container (expand to fit window)
-    frame.pack(fill=tk.BOTH, expand=1)
+# Lay out the main container (expand to fit window)
+frame.pack(fill=tk.BOTH, expand=1)
 
-    # Set variables
-    track_name = tk.StringVar()
-    detail_text = tk.StringVar()
+# Set variables
+track_name = tk.StringVar()
+detail_text = tk.StringVar()
+if sonos_settings.show_artist_and_album:
+    track_font = tkFont.Font(family='Helvetica', size=30)
+else:
+    track_font = tkFont.Font(family='Helvetica', size=40)
+image_font = tkFont.Font(size=25)
+detail_font = tkFont.Font(family='Helvetica', size=15)
+
+# Create widgets
+label_albumart = tk.Label(frame,
+                        image = None,
+                        font=image_font,
+                        borderwidth=0,
+                        highlightthickness=0,
+                        fg='white',
+                        bg='black')
+label_track = tk.Label(frame,
+                        textvariable=track_name,
+                        font=track_font,
+                        fg='white',
+                        bg='black',
+                        wraplength=600,
+                        justify="center")
+label_detail = tk.Label(frame,
+                        textvariable=detail_text,
+                        font=detail_font,
+                        fg='white',
+                        bg='black',
+                        wraplength=600,
+                        justify="center")
+
+
+if sonos_settings.show_details == False:
+    label_albumart.place (relx=0.5, rely=0.5, anchor=tk.CENTER)
+
+if sonos_settings.show_details == True:
+    label_albumart.place(x=360, y=thumbsize[1]/2, anchor=tk.CENTER)
+    label_track.place (x=360, y=thumbsize[1]+20, anchor=tk.N)
+
+    label_track.update()
+    height_of_track_label = label_track.winfo_reqheight()
+
     if sonos_settings.show_artist_and_album:
-        track_font = tkFont.Font(family='Helvetica', size=30)
-    else:
-        track_font = tkFont.Font(family='Helvetica', size=40)
-    image_font = tkFont.Font(size=25)
-    detail_font = tkFont.Font(family='Helvetica', size=15)
+        label_detail.place (x=360, y=710, anchor=tk.S)
 
-    # Create widgets
-    label_albumart = tk.Label(frame,
-                            image = None,
-                            font=image_font,
-                            borderwidth=0,
-                            highlightthickness=0,
-                            fg='white',
-                            bg='black')
-    label_track = tk.Label(frame,
-                            textvariable=track_name,
-                            font=track_font,
-                            fg='white',
-                            bg='black',
-                            wraplength=600,
-                            justify="center")
-    label_detail = tk.Label(frame,
-                            textvariable=detail_text,
-                            font=detail_font,
-                            fg='white',
-                            bg='black',
-                            wraplength=600,
-                            justify="center")
+frame.grid_propagate(False)
 
+# Start in fullscreen mode
+root.attributes('-fullscreen', fullscreen)
+root.update()
 
-    if sonos_settings.show_details == False:
-        label_albumart.place (relx=0.5, rely=0.5, anchor=tk.CENTER)
-
-    if sonos_settings.show_details == True:
-        label_albumart.place(x=360, y=thumbsize[1]/2, anchor=tk.CENTER)
-        label_track.place (x=360, y=thumbsize[1]+20, anchor=tk.N)
-
-        label_track.update()
-        height_of_track_label = label_track.winfo_reqheight()
-
-        if sonos_settings.show_artist_and_album:
-            label_detail.place (x=360, y=710, anchor=tk.S)
-
-    frame.grid_propagate(False)
-
-    # Start in fullscreen mode
-    root.attributes('-fullscreen', fullscreen)
-    root.update()
-
-    return TkData(root, detail_text, label_albumart, track_name)
+tk_data = TkData(root, detail_text, label_albumart, track_name)
 
 
 async def main(loop):
@@ -236,7 +234,6 @@ async def main(loop):
 
     session = ClientSession()
     sonos_data = SonosData(sonos_room, session)
-    tk_data = setup_tk()
 
     webhook = SonosWebhook(sonos_data)
     await webhook.listen()
