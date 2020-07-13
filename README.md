@@ -28,6 +28,18 @@ I have put together step-by-step basic instructions:
 - [e-INK version here](https://www.hackster.io/mark-hank/currently-playing-music-on-e-ink-display-310645)
 - [High res version here](https://www.hackster.io/mark-hank/sonos-album-art-on-raspberry-pi-screen-5b0012)
 
+# Webhook updates
+
+Enabling webhook support in the `node-sonos-http-api` configuration is **strongly** recommended. Without this enabled, the script must repeatedly poll to check for updates.
+
+Webhook support for `node-sonos-http-api` can be enabled by updating the `settings.json` configuration:
+```
+{
+  "webhook": "http://localhost:8080/"
+}
+```
+This assumes the `node-sonos-http-api` instance is running on the same machine. If running on a different machine, replace `localhost` with the IP of the host running this script.
+
 # Optional backlight control
 
 Thanks to a pull request from [jjlawren](https://github.com/jjlawren) there is now the option to have the backlight of the Hyperpixel turn off when music is not playing.
