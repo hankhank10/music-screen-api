@@ -68,6 +68,8 @@ class SonosData():
                 self.webhook_active = False
 
         type_playing = obj['currentTrack']['type']
+        self.artist = obj['currentTrack'].get('artist', "")
+        self.album = obj['currentTrack'].get('album', "")
         self.duration = obj['currentTrack']['duration']
 
         # detect if its coming from Sonos radio, in which case forget that it's radio and pretend it's a normal track
@@ -84,13 +86,9 @@ class SonosData():
                 # if not then try to look it up (usually because its played from Alexa)
                 self.trackname = str(find_unknown_radio_station_name(obj['currentTrack']['title']))
 
-            self.artist = ""
-            self.album = ""
             self.image = obj['currentTrack'].get('absoluteAlbumArtUri', "")
         else:
             self.trackname = obj['currentTrack'].get('title', "")
-            self.artist = obj['currentTrack'].get('artist', "")
-            self.album = obj['currentTrack'].get('album', "")
 
             album_art_uri = obj['currentTrack'].get('albumArtUri')
             if album_art_uri and album_art_uri.startswith('http'):
