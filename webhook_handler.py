@@ -4,8 +4,9 @@ from aiohttp import web
 
 class SonosWebhook():
 
-    def __init__(self, sonos_data):
+    def __init__(self, sonos_data, callback):
         """Initialize the webhook handler."""
+        self.callback = callback
         self.runner = None
         self.sonos_data = sonos_data
 
@@ -23,6 +24,7 @@ class SonosWebhook():
         if json['type'] == 'transport-state':
             if json['data']['roomName'] == self.sonos_data.room:
                 await self.sonos_data.refresh(json['data']['state'])
+                await self.callback()
         return web.Response(text="hello")
 
     async def stop(self):

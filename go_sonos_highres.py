@@ -77,14 +77,12 @@ def set_backlight_power(new_state):
             print("Backlight control failed, ensure permissions are correct: https://github.com/linusg/rpi-backlight#installation")
             backlight = None
 
-# Read values from the sensors at regular intervals
-async def update(session, sonos_data, tk_data):
+async def redraw(session, sonos_data, tk_data):
+    """Redraw the screen with current data."""
     global last_update_timestamp
     global previous_track
 
     last_update_timestamp = time.time()
-
-    await sonos_data.refresh()
 
     if sonos_data.status == "API error":
         if remote_debug_key != "": print ("API error reported fyi")
@@ -235,7 +233,11 @@ async def main(loop):
     session = ClientSession()
     sonos_data = SonosData(sonos_room, session)
 
-    webhook = SonosWebhook(sonos_data)
+    async def webhook_callback():
+        """Callback to trigger after webhook is processed."""
+        await redraw(session, sonos_data, tk_data)
+
+    webhook = SonosWebhook(sonos_data, webhook_callback)
     await webhook.listen()
 
     for signame in ('SIGINT', 'SIGTERM', 'SIGQUIT'):
@@ -248,7 +250,8 @@ async def main(loop):
             update_interval = 1
 
         if time.time() - last_update_timestamp > update_interval:
-            await update(session, sonos_data, tk_data)
+            await sonos_data.refresh()
+            await redraw(session, sonos_data, tk_data)
         await asyncio.sleep(1)
 
 async def cleanup(loop, session, webhook):
