@@ -28,6 +28,7 @@ class SonosData():
         self.trackname = ""
         self.artist = ""
         self.album = ""
+        self.duration = 0
         self.image = ""
         self.status = ""
 
