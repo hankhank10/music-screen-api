@@ -2,6 +2,7 @@
 # if you're looking for that then try sonos_settings.py
 # sorry, I know it's confusingly named - but it's too late to change now!
 
+import re
 import time
 from urllib.parse import urljoin
 
@@ -21,6 +22,7 @@ class SonosData():
         self.room = sonos_room
         self.session = session
         self.webhook_active = False
+        self._speaker_uri = None
         self._track_is_new = True
 
         self.trackname = ""
@@ -34,6 +36,17 @@ class SonosData():
         if self.last_webhook > self.last_poll:
             return self.last_webhook
         return self.last_poll
+
+    def get_speaker_uri(self, json_data):
+        """Return the speaker's URL based on the state JSON."""
+        if self._speaker_uri:
+            return self._speaker_uri
+
+        next_track_art = json_data['nextTrack'].get("absoluteAlbumArtUri", "")
+        match = re.search("(^https?:\/\/.*:1400)\/getaa\?.*", next_track_art)
+        if match:
+            self._speaker_uri = match.group(1)
+            return self._speaker_uri
 
     def is_track_new(self):
         """Return True if the track has changed since last update."""
@@ -105,9 +118,12 @@ class SonosData():
             print("Webhook activity timed out, falling back to polling")
             self.webhook_active = False
 
-        album_art_uri = obj['currentTrack'].get('albumArtUri')
-        if album_art_uri and album_art_uri.startswith('http'):
+        album_art_uri = obj['currentTrack'].get('albumArtUri', "")
+        speaker_uri = self.get_speaker_uri(obj)
+        if album_art_uri.startswith('http'):
             self.image = album_art_uri
+        elif speaker_uri and album_art_uri:
+            self.image = f"{speaker_uri}{album_art_uri}"
         else:
             self.image = obj['currentTrack'].get('absoluteAlbumArtUri', "")
 
