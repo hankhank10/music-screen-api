@@ -21,6 +21,7 @@ class SonosData():
         self.room = sonos_room
         self.session = session
         self.webhook_active = False
+        self._track_is_new = True
 
         self.trackname = ""
         self.artist = ""
@@ -33,6 +34,12 @@ class SonosData():
         if self.last_webhook > self.last_poll:
             return self.last_webhook
         return self.last_poll
+
+    def is_track_new(self):
+        """Return True if the track has changed since last update."""
+        is_new = self._track_is_new
+        self._track_is_new = False
+        return is_new
 
     async def refresh(self, payload=None):
         """Refresh the Sonos media data with provided payload or a new get request."""
@@ -55,17 +62,11 @@ class SonosData():
                 print(f"Error connecting to Sonos API: {err}")
                 return
 
-        try:
-            self.status = obj['playbackState']
-        except KeyError:
-            print("Error: http-sonos-api object is missing playbackState")
-            self.status = "API error"
-            return
+        self.status = obj.get('playbackState', "API error")
 
-        if self.status == "PLAYING" and self.webhook_active:
-            if self.last_poll - self.last_webhook > WEBHOOK_TIMEOUT:
-                print("Webhook activity timed out, falling back to polling")
-                self.webhook_active = False
+        # Don't bother processing the payload unless media is actively playing
+        if self.status != "PLAYING":
+            return
 
         type_playing = obj['currentTrack']['type']
         self.artist = obj['currentTrack'].get('artist', "")
@@ -85,16 +86,30 @@ class SonosData():
             else:
                 # if not then try to look it up (usually because its played from Alexa)
                 self.trackname = str(find_unknown_radio_station_name(obj['currentTrack']['title']))
-
-            self.image = obj['currentTrack'].get('absoluteAlbumArtUri', "")
         else:
             self.trackname = obj['currentTrack'].get('title', "")
 
-            album_art_uri = obj['currentTrack'].get('albumArtUri')
-            if album_art_uri and album_art_uri.startswith('http'):
-                self.image = album_art_uri
-            else:
-                self.image = obj['currentTrack'].get('absoluteAlbumArtUri', "")
+        # Abort update if all data is empty
+        if not any([self.album, self.artist, self.duration, self.trackname]):
+            return
+
+        track_id = f"{self.trackname}|{self.artist}|{self.album}|{self.duration}"
+
+        # Abort update if track has not changed
+        if track_id == self.previous_track:
+            return
+
+        self.previous_track = track_id
+        self._track_is_new = True
+        if self.webhook_active and (self.last_poll - self.last_webhook > WEBHOOK_TIMEOUT):
+            print("Webhook activity timed out, falling back to polling")
+            self.webhook_active = False
+
+        album_art_uri = obj['currentTrack'].get('albumArtUri')
+        if album_art_uri and album_art_uri.startswith('http'):
+            self.image = album_art_uri
+        else:
+            self.image = obj['currentTrack'].get('absoluteAlbumArtUri', "")
 
 
 def find_unknown_radio_station_name(filename):

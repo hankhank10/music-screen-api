@@ -96,19 +96,8 @@ async def redraw(session, sonos_data, tk_data):
     if sonos_data.status == "PLAYING":
         if remote_debug_key != "": print ("Music playing")
 
-        # Ignore update if all data is empty
-        if not any([current_album, current_artist, current_duration, current_trackname]):
+        if not sonos_data.is_track_new():
             return
-
-        # check whether the track has changed - don't bother updating everything if not
-        new_track_id = f"{current_trackname}|{current_artist}|{current_album}|{current_duration}"
-        if new_track_id == sonos_data.previous_track:
-            return
-
-        if remote_debug_key != "": print ("Current track " + new_track_id + " is not same as previous track " + sonos_data.previous_track)
-
-        # update previous trackname so we know what has changed in future
-        sonos_data.previous_track = new_track_id
 
         # slim down the trackname
         if sonos_settings.demaster:
@@ -147,7 +136,6 @@ async def redraw(session, sonos_data, tk_data):
         tk_data.track_name.set("")
         tk_data.detail_text.set("")
         tk_data.label_albumart.configure (image = "")
-        sonos_data.previous_track = None
         if remote_debug_key != "": print ("Track not playing - doing nothing")
 
     tk_data.root.update()
