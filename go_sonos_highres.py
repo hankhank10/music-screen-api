@@ -4,6 +4,8 @@ it integrates with your local Sonos sytem to display what is currently playing
 """
 
 import asyncio
+import logging
+import os
 import signal
 import sys
 import time
@@ -20,10 +22,11 @@ import sonos_settings
 from sonos_user_data import SonosData
 from webhook_handler import SonosWebhook
 
+_LOGGER = logging.getLogger(__name__)
+
 try:
     from rpi_backlight import Backlight
 except ImportError:
-    print ("Backlight control not available, please install the 'rpi_backlight' Python package: https://github.com/linusg/rpi-backlight#installation")
     backlight = None
 else:
     backlight = Backlight()
@@ -73,11 +76,12 @@ def set_backlight_power(new_state):
     global backlight
     if backlight:
         if new_state is False and backlight.power:
+            _LOGGER.debug("Going idle, turning backlight off")
             if remote_debug_key != "": print("Going idle, turning backlight off")
         try:
             backlight.power = new_state
         except PermissionError:
-            print("Backlight control failed, ensure permissions are correct: https://github.com/linusg/rpi-backlight#installation")
+            _LOGGER.error("Backlight control failed, ensure permissions are correct: https://github.com/linusg/rpi-backlight#installation")
             backlight = None
 
 async def redraw(session, sonos_data, tk_data):
@@ -103,6 +107,7 @@ async def redraw(session, sonos_data, tk_data):
         if sonos_settings.demaster:
             current_trackname = demaster.strip_name (current_trackname)
             if remote_debug_key != "": print ("Demastered to " + current_trackname)
+            _LOGGER.debug("Demastered to %s", current_trackname)
 
         # set the details we need from the API into variables
         tk_data.track_name.set(current_trackname)
@@ -115,7 +120,7 @@ async def redraw(session, sonos_data, tk_data):
         except:
             pil_image = Image.open (sys.path[0] + "/sonos.png")
             target_image_width = 500
-            print ("Image failed to load so showing standard sonos logo")
+            _LOGGER.warning("Image failed to load: %s", current_image_url)
 
         # set the image size based on whether we are showing track details as well
         if sonos_settings.show_details == True:
@@ -207,8 +212,51 @@ root.update()
 
 tk_data = TkData(root, detail_text, label_albumart, track_name)
 
+def setup_logging():
+    """Set up logging facilities for the script."""
+    try:
+        log_level = sonos_settings.log_level
+    except AttributeError:
+        log_level = logging.DEBUG
+
+    try:
+        log_path = os.path.expanduser(sonos_settings.log_file)
+    except AttributeError:
+        log_path = None
+
+    fmt = "%(asctime)s %(levelname)7s - %(message)s"
+    logging.basicConfig(format=fmt, level=log_level)
+
+    # Suppress overly verbose logs from libraries that aren't helpful
+    logging.getLogger("aiohttp.access").setLevel(logging.WARNING)
+
+    if log_path is None:
+        return
+
+    log_path_exists = os.path.isfile(log_path)
+    log_dir = os.path.dirname(log_path)
+
+    if (log_path_exists and os.access(log_path, os.W_OK)) or (
+        not log_path_exists and os.access(log_dir, os.W_OK)
+    ):
+        _LOGGER.info("Writing to log file: %s", log_path)
+        logfile_handler = logging.FileHandler(log_path, mode="a")
+
+        logfile_handler.setLevel(log_level)
+        logfile_handler.setFormatter(logging.Formatter(fmt))
+
+        logger = logging.getLogger("")
+        logger.addHandler(logfile_handler)
+    else:
+        _LOGGER.error("Cannot write to %s, check permissions and ensure directory exists", log_path)
 
 async def main(loop):
+    """Main process for script."""
+    setup_logging()
+
+    if backlight is None:
+        _LOGGER.error("Backlight control not available, please install the 'rpi_backlight' Python package: https://github.com/linusg/rpi-backlight#installation")
+
     if sonos_settings.room_name_for_highres == "":
         print ("No room name found in sonos_settings.py")
         print ("You can specify a room name manually below")
@@ -218,7 +266,7 @@ async def main(loop):
         sonos_room = input ("Enter a Sonos room name for testing purposes>>>  ")
     else:
         sonos_room = sonos_settings.room_name_for_highres
-        print ("Sonos room name set as " + sonos_room + " from settings file")
+        _LOGGER.info("Monitoring room: %s", sonos_room)
 
     session = ClientSession()
     sonos_data = SonosData(sonos_room, session)
@@ -245,6 +293,8 @@ async def main(loop):
         await asyncio.sleep(1)
 
 async def cleanup(loop, session, webhook):
+    """Cleanup tasks on shutdown."""
+    _LOGGER.debug("Shutting down")
     set_backlight_power(True)
     await session.close()
     await webhook.stop()

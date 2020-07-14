@@ -2,11 +2,15 @@
 # if you're looking for that then try sonos_settings.py
 # sorry, I know it's confusingly named - but it's too late to change now!
 
+import logging
 import re
 import time
 from urllib.parse import urljoin
 
 import sonos_settings
+
+
+_LOGGER = logging.getLogger(__name__)
 
 WEBHOOK_TIMEOUT = 130
 
@@ -47,6 +51,7 @@ class SonosData():
         match = re.search("(^https?:\/\/.*:1400)\/getaa\?.*", next_track_art)
         if match:
             self._speaker_uri = match.group(1)
+            _LOGGER.debug("URL for %s found: %s", self.room, self._speaker_uri)
             return self._speaker_uri
 
     def is_track_new(self):
@@ -59,7 +64,7 @@ class SonosData():
         """Refresh the Sonos media data with provided payload or a new get request."""
         if payload:
             if not self.webhook_active:
-                print("Switching to webhook updates")
+                _LOGGER.info("Switching to webhook updates")
             self.last_webhook = time.time()
             self.webhook_active = True
             obj = payload
@@ -73,7 +78,7 @@ class SonosData():
                     obj = await response.json()
             except Exception as err:
                 self.status = "API error"
-                print(f"Error connecting to Sonos API: {err}")
+                _LOGGER.exception(f"Error connecting to Sonos API: {err}")
                 return
 
         self.status = obj.get('playbackState', "API error")
@@ -105,6 +110,7 @@ class SonosData():
 
         # Abort update if all data is empty
         if not any([self.album, self.artist, self.duration, self.trackname]):
+            _LOGGER.debug("No data returned by the API, skipping update")
             return
 
         track_id = f"{self.trackname}|{self.artist}|{self.album}|{self.duration}"
@@ -113,10 +119,12 @@ class SonosData():
         if track_id == self.previous_track:
             return
 
+        _LOGGER.debug("New track: %s", track_id)
+
         self.previous_track = track_id
         self._track_is_new = True
         if self.webhook_active and (self.last_poll - self.last_webhook > WEBHOOK_TIMEOUT):
-            print("Webhook activity timed out, falling back to polling")
+            _LOGGER.warning("Webhook activity timed out, falling back to polling")
             self.webhook_active = False
 
         album_art_uri = obj['currentTrack'].get('albumArtUri', "")
