@@ -124,10 +124,6 @@ async def redraw(session, sonos_data, tk_data):
             if remote_debug_key != "": print ("Demastered to " + current_trackname)
             _LOGGER.debug("Demastered to %s", current_trackname)
 
-        # set the details we need from the API into variables
-        tk_data.track_name.set(current_trackname)
-        tk_data.detail_text.set(current_artist + " • "+ current_album)
-
         if current_image_url:
             try:
                 async with session.get(current_image_url) as response:
@@ -142,9 +138,12 @@ async def redraw(session, sonos_data, tk_data):
             target_image_width = 500
             _LOGGER.warning("Image URL not available, using default")
 
-        # set the image size based on whether we are showing track details as well
+        # set the image size and text based on whether we are showing track details as well
         if sonos_settings.show_details == True:
             target_image_width = thumbwidth
+            tk_data.track_name.set(current_trackname)
+            detail_text = f"{current_artist} • {current_album}"
+            tk_data.detail_text.set(detail_text)
         else:
             target_image_width = screenwidth
 
