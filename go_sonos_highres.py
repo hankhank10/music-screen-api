@@ -128,14 +128,19 @@ async def redraw(session, sonos_data, tk_data):
         tk_data.track_name.set(current_trackname)
         tk_data.detail_text.set(current_artist + " • "+ current_album)
 
-        try:
-            async with session.get(current_image_url) as response:
-                image_url_response = await response.read()
-            pil_image = Image.open(BytesIO(image_url_response))
-        except:
-            pil_image = Image.open (sys.path[0] + "/sonos.png")
+        if current_image_url:
+            try:
+                async with session.get(current_image_url) as response:
+                    image_url_response = await response.read()
+                pil_image = Image.open(BytesIO(image_url_response))
+            except:
+                pil_image = Image.open (sys.path[0] + "/sonos.png")
+                target_image_width = 500
+                _LOGGER.warning("Image failed to load: %s", current_image_url)
+        else:
+            pil_image = Image.open(sys.path[0] + "/sonos.png")
             target_image_width = 500
-            _LOGGER.warning("Image failed to load: %s", current_image_url)
+            _LOGGER.warning("Image URL not available, using default")
 
         # set the image size based on whether we are showing track details as well
         if sonos_settings.show_details == True:
