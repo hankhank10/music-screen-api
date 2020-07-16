@@ -34,16 +34,25 @@ else:
 
 class TkData():
 
-    def __init__(self, root, detail_text, label_albumart, track_name):
+    def __init__(self, root, album_frame, curtain_frame, detail_text, label_albumart, track_name):
         """Initialize the object."""
         self.root = root
+        self.album_frame = album_frame
+        self.curtain_frame = curtain_frame
         self.detail_text = detail_text
         self.label_albumart = label_albumart
         self.track_name = track_name
+        self.is_showing = False
 
-    def has_track_info(self):
-        """Return True if Labels contain track data."""
-        return bool(self.track_name.get())
+    def show_album(self, should_show):
+        """Control if album art should be displayed or hidden."""
+        if should_show != self.is_showing:
+            if should_show:
+                self.album_frame.tkraise()
+            else:
+                self.curtain_frame.tkraise()
+            self.is_showing = should_show
+        set_backlight_power(should_show)
 
 
 ## Remote debug mode - only activate if you are experiencing issues and want the developer to help
@@ -104,7 +113,9 @@ async def redraw(session, sonos_data, tk_data):
     if sonos_data.status == "PLAYING":
         if remote_debug_key != "": print ("Music playing")
 
-        if not sonos_data.is_track_new() and tk_data.has_track_info():
+        if not sonos_data.is_track_new():
+            # Ensure the album frame is displayed in case the current track was paused, seeked, etc
+            tk_data.show_album(True)
             return
 
         # slim down the trackname
@@ -137,14 +148,11 @@ async def redraw(session, sonos_data, tk_data):
         hsize = int((float(pil_image.size[1])*float(wpercent)))
         pil_image = pil_image.resize((target_image_width,hsize), Image.ANTIALIAS)
 
-        set_backlight_power(True)
         tk_image = ImageTk.PhotoImage(pil_image)
         tk_data.label_albumart.configure (image = tk_image)
+        tk_data.show_album(True)
     else:
-        set_backlight_power(False)
-        tk_data.track_name.set("")
-        tk_data.detail_text.set("")
-        tk_data.label_albumart.configure (image = "")
+        tk_data.show_album(False)
         if remote_debug_key != "": print ("Track not playing - doing nothing")
 
     tk_data.root.update()
@@ -155,11 +163,11 @@ root = tk.Tk()
 root.geometry("720x720")
 root.title("Music Display")
 
-# Create the main container
-frame = tk.Frame(root, bg='black', width=720, height=720)
+album_frame = tk.Frame(root, bg='black', width=720, height=720)
+curtain_frame = tk.Frame(root, bg='black', width=720, height=720)
 
-# Lay out the main container (expand to fit window)
-frame.pack(fill=tk.BOTH, expand=1)
+album_frame.grid(row=0, column=0, sticky="news")
+curtain_frame.grid(row=0, column=0, sticky="news")
 
 # Set variables
 track_name = tk.StringVar()
@@ -172,21 +180,21 @@ image_font = tkFont.Font(size=25)
 detail_font = tkFont.Font(family='Helvetica', size=15)
 
 # Create widgets
-label_albumart = tk.Label(frame,
-                        image = None,
+label_albumart = tk.Label(album_frame,
+                        image=None,
                         font=image_font,
                         borderwidth=0,
                         highlightthickness=0,
                         fg='white',
                         bg='black')
-label_track = tk.Label(frame,
+label_track = tk.Label(album_frame,
                         textvariable=track_name,
                         font=track_font,
                         fg='white',
                         bg='black',
                         wraplength=600,
                         justify="center")
-label_detail = tk.Label(frame,
+label_detail = tk.Label(album_frame,
                         textvariable=detail_text,
                         font=detail_font,
                         fg='white',
@@ -208,13 +216,13 @@ if sonos_settings.show_details == True:
     if sonos_settings.show_artist_and_album:
         label_detail.place (x=360, y=710, anchor=tk.S)
 
-frame.grid_propagate(False)
+album_frame.grid_propagate(False)
 
 # Start in fullscreen mode
 root.attributes('-fullscreen', fullscreen)
 root.update()
 
-tk_data = TkData(root, detail_text, label_albumart, track_name)
+tk_data = TkData(root, album_frame, curtain_frame, detail_text, label_albumart, track_name)
 
 def setup_logging():
     """Set up logging facilities for the script."""
