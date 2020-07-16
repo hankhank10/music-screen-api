@@ -41,6 +41,10 @@ class TkData():
         self.label_albumart = label_albumart
         self.track_name = track_name
 
+    def has_track_info(self):
+        """Return True if Labels contain track data."""
+        return bool(self.track_name.get())
+
 
 ## Remote debug mode - only activate if you are experiencing issues and want the developer to help
 remote_debug_key = ""
@@ -100,7 +104,7 @@ async def redraw(session, sonos_data, tk_data):
     if sonos_data.status == "PLAYING":
         if remote_debug_key != "": print ("Music playing")
 
-        if not sonos_data.is_track_new():
+        if not sonos_data.is_track_new() and tk_data.has_track_info():
             return
 
         # slim down the trackname
