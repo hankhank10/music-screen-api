@@ -1,13 +1,10 @@
-# Note: this is not the file where you change your user settings for Sonos
-# if you're looking for that then try sonos_settings.py
-# sorry, I know it's confusingly named - but it's too late to change now!
-
+"""
+Helper class to retrieve and process data from `node-http-sonos-api`.
+"""
 import logging
 import re
 import time
 from urllib.parse import urljoin
-
-import sonos_settings
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -18,8 +15,10 @@ WEBHOOK_TIMEOUT = 130
 class SonosData():
     """Holds all data related to the chosen Sonos speaker."""
 
-    def __init__(self, sonos_room, session):
+    def __init__(self, api_host, api_port, sonos_room, session):
         """Initialize the object."""
+        self.api_host = api_host
+        self.api_port = api_port
         self.last_poll = 0
         self.last_webhook = 0
         self.previous_track = None
@@ -70,7 +69,7 @@ class SonosData():
             obj = payload
         else:
             self.last_poll = time.time()
-            base_url = f"http://{sonos_settings.sonos_http_api_address}:{sonos_settings.sonos_http_api_port}"
+            base_url = f"http://{self.api_host}:{self.api_port}"
             url = urljoin(base_url, f"{self.room}/state")
 
             try:
