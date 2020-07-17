@@ -235,14 +235,11 @@ tk_data = TkData(root, album_frame, curtain_frame, detail_text, label_albumart, 
 
 def setup_logging():
     """Set up logging facilities for the script."""
-    try:
-        log_level = sonos_settings.log_level
-    except AttributeError:
-        log_level = logging.DEBUG
-
-    try:
-        log_path = os.path.expanduser(sonos_settings.log_file)
-    except AttributeError:
+    log_level = getattr(sonos_settings, "log_level", logging.DEBUG)
+    log_file = getattr(sonos_settings, "log_file", None)
+    if log_file:
+        log_path = os.path.expanduser(log_file)
+    else:
         log_path = None
 
     fmt = "%(asctime)s %(levelname)7s - %(message)s"
