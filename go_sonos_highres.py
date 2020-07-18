@@ -18,11 +18,16 @@ from PIL import Image, ImageFile, ImageTk
 
 import demaster
 import scrap
-import sonos_settings
 from sonos_user_data import SonosData
 from webhook_handler import SonosWebhook
 
 _LOGGER = logging.getLogger(__name__)
+
+try:
+    import sonos_settings
+except ImportError:
+    _LOGGER.error("ERROR: Config file not found. Copy 'sonos_config.py.example' to 'sonos_config.py' and edit.")
+    sys.exit(1)
 
 try:
     from rpi_backlight import Backlight
@@ -230,14 +235,11 @@ tk_data = TkData(root, album_frame, curtain_frame, detail_text, label_albumart, 
 
 def setup_logging():
     """Set up logging facilities for the script."""
-    try:
-        log_level = sonos_settings.log_level
-    except AttributeError:
-        log_level = logging.DEBUG
-
-    try:
-        log_path = os.path.expanduser(sonos_settings.log_file)
-    except AttributeError:
+    log_level = getattr(sonos_settings, "log_level", logging.DEBUG)
+    log_file = getattr(sonos_settings, "log_file", None)
+    if log_file:
+        log_path = os.path.expanduser(log_file)
+    else:
         log_path = None
 
     fmt = "%(asctime)s %(levelname)7s - %(message)s"
@@ -285,7 +287,12 @@ async def main(loop):
         _LOGGER.info("Monitoring room: %s", sonos_room)
 
     session = ClientSession()
-    sonos_data = SonosData(sonos_room, session)
+    sonos_data = SonosData(
+            sonos_settings.sonos_http_api_address,
+            sonos_settings.sonos_http_api_port,
+            sonos_room,
+            session,
+    )
 
     async def webhook_callback():
         """Callback to trigger after webhook is processed."""
