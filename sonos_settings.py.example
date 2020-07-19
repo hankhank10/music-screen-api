@@ -15,6 +15,9 @@ log_level = "DEBUG"
 # Crop song names to remove nonsense such as "Remastered" or "live at"
 demaster = True
 
+# Send track names to http://demaster.hankapi.com for more advanced track name cleanup
+demaster_query_cloud = False
+
 
 ## High-res only settings
 

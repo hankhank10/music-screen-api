@@ -125,7 +125,8 @@ async def redraw(session, sonos_data, tk_data):
 
         # slim down the trackname
         if sonos_settings.demaster:
-            current_trackname = demaster.strip_name (current_trackname)
+            offline = not getattr(sonos_settings, "demaster_query_cloud", False)
+            current_trackname = demaster.strip_name(current_trackname, offline)
             if remote_debug_key != "": print ("Demastered to " + current_trackname)
             _LOGGER.debug("Demastered to %s", current_trackname)
 
