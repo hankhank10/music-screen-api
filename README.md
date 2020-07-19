@@ -32,13 +32,17 @@ I have put together step-by-step basic instructions:
 
 Enabling webhook support in the `node-sonos-http-api` configuration is **strongly** recommended. Without this enabled, the script must repeatedly poll to check for updates.
 
-Webhook support for `node-sonos-http-api` can be enabled by updating the `settings.json` configuration:
+Webhook support for `node-sonos-http-api` can be enabled by updating/creating the `settings.json` configuration file located in the base of the `node-sonos-http-api/` directory:
 ```
 {
   "webhook": "http://localhost:8080/"
 }
 ```
-This assumes the `node-sonos-http-api` instance is running on the same machine. If running on a different machine, replace `localhost` with the IP of the host running this script.
+_Note_: This file does not exist by default and you may need to create it. Also note that the `settings.js` file is part of the `node-sonos-http-api` code and should **not** be modified.
+
+The above configuration assumes that `node-sonos-http-api` is running on the same machine. If running on a different machine, replace `localhost` with the IP of the host running this script.
+
+
 
 # Optional backlight control
 
