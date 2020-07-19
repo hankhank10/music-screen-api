@@ -133,12 +133,14 @@ async def redraw(session, sonos_data, tk_data):
         if current_image_url:
             try:
                 async with session.get(current_image_url) as response:
+                    if not response.headers['Content-Type'].startswith('image/'):
+                        raise TypeError("Not a valid image content type")
                     image_url_response = await response.read()
                 pil_image = Image.open(BytesIO(image_url_response))
-            except:
+            except Exception as err:
                 pil_image = Image.open (sys.path[0] + "/sonos.png")
                 target_image_width = 500
-                _LOGGER.warning("Image failed to load: %s", current_image_url)
+                _LOGGER.warning("Image failed to load: %s [%s]", current_image_url, err)
         else:
             pil_image = Image.open(sys.path[0] + "/sonos.png")
             target_image_width = 500
