@@ -133,7 +133,7 @@ async def redraw(session, sonos_data, tk_data):
         if current_image_url:
             try:
                 async with session.get(current_image_url) as response:
-                    if not response.headers['Content-Type'].startswith('image/'):
+                    if 'Content-Type' in response.headers and response.headers['Content-Type'].startswith('image/'):
                         raise TypeError("Not a valid image content type")
                     image_url_response = await response.read()
                 pil_image = Image.open(BytesIO(image_url_response))
