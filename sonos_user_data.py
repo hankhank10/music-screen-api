@@ -75,9 +75,13 @@ class SonosData():
             try:
                 async with self.session.get(url) as response:
                     obj = await response.json()
+            except ConnectionRefusedError:
+                self.status = "API error"
+                _LOGGER.error("Connection refused. Ensure `node-sonos-http-api` is running.")
+                return
             except Exception as err:
                 self.status = "API error"
-                _LOGGER.exception(f"Error connecting to Sonos API: {err}")
+                _LOGGER.exception("Error connecting to Sonos API: %s", err)
                 return
 
         self.status = obj.get('playbackState', "API error")
