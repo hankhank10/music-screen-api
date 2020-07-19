@@ -250,6 +250,7 @@ def setup_logging():
 
     # Suppress overly verbose logs from libraries that aren't helpful
     logging.getLogger("aiohttp.access").setLevel(logging.WARNING)
+    logging.getLogger("PIL.PngImagePlugin").setLevel(logging.WARNING)
 
     if log_path is None:
         return
