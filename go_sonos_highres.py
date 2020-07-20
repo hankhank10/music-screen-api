@@ -43,6 +43,7 @@ class TkData():
         """Initialize the object."""
         self.root = root
         self.album_frame = album_frame
+        self.album_image = None
         self.curtain_frame = curtain_frame
         self.detail_text = detail_text
         self.label_albumart = label_albumart
@@ -53,11 +54,12 @@ class TkData():
         """Control if album art should be displayed or hidden."""
         if should_show != self.is_showing:
             if should_show:
-                self.album_frame.tkraise()
+                self.album_frame.lift()
             else:
-                self.curtain_frame.tkraise()
+                self.curtain_frame.lift()
             self.is_showing = should_show
         set_backlight_power(should_show)
+        self.root.update()
 
 
 ## Remote debug mode - only activate if you are experiencing issues and want the developer to help
@@ -161,14 +163,13 @@ async def redraw(session, sonos_data, tk_data):
         hsize = int((float(pil_image.size[1])*float(wpercent)))
         pil_image = pil_image.resize((target_image_width,hsize), Image.ANTIALIAS)
 
-        tk_image = ImageTk.PhotoImage(pil_image)
-        tk_data.label_albumart.configure (image = tk_image)
+        # Store the image as an attribute to preserve scope for Tk
+        tk_data.album_image = ImageTk.PhotoImage(pil_image)
+        tk_data.label_albumart.configure(image=tk_data.album_image)
         tk_data.show_album(True)
     else:
         tk_data.show_album(False)
         if remote_debug_key != "": print ("Track not playing - doing nothing")
-
-    tk_data.root.update()
 
 
 # Create the main window
