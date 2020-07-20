@@ -104,6 +104,24 @@ def set_backlight_power(new_state):
             _LOGGER.error("Backlight control failed, ensure permissions are correct: https://github.com/linusg/rpi-backlight#installation")
             backlight = None
 
+async def get_image_data(session, url):
+    """Return image data from a URL if available."""
+    if not url:
+        return None
+
+    try:
+        async with session.get(url) as response:
+            content_type = response.headers.get('content-type')
+            if content_type and not content_type.startswith('image/'):
+                _LOGGER.warning("Not a valid image type (%s): %s", content_type, url)
+                return None
+            return await response.read()
+    except aiohttp.ClientError as err:
+        _LOGGER.warning("Problem connecting to %s [%s]", url, err)
+    except Exception as err:
+        _LOGGER.warning("Image failed to load: %s [%s]", url, err)
+    return None
+
 async def redraw(session, sonos_data, tk_data):
     """Redraw the screen with current data."""
     if sonos_data.status == "API error":
@@ -115,6 +133,7 @@ async def redraw(session, sonos_data, tk_data):
     current_duration = sonos_data.duration
     current_image_url = sonos_data.image
     current_trackname = sonos_data.trackname
+    pil_image = None
 
     # see if something is playing
     if sonos_data.status == "PLAYING":
@@ -132,22 +151,13 @@ async def redraw(session, sonos_data, tk_data):
             if remote_debug_key != "": print ("Demastered to " + current_trackname)
             _LOGGER.debug("Demastered to %s", current_trackname)
 
-        if current_image_url:
-            try:
-                async with session.get(current_image_url) as response:
-                    content_type = response.headers.get('Content-Type')
-                    if content_type and not content_type.startswith('image/'):
-                        raise TypeError("Not a valid image content type")
-                    image_url_response = await response.read()
-                pil_image = Image.open(BytesIO(image_url_response))
-            except Exception as err:
-                pil_image = Image.open (sys.path[0] + "/sonos.png")
-                target_image_width = 500
-                _LOGGER.warning("Image failed to load: %s [%s]", current_image_url, err)
-        else:
+        image_data = await get_image_data(session, current_image_url)
+        if image_data:
+            pil_image = Image.open(BytesIO(image_data))
+
+        if pil_image is None:
             pil_image = Image.open(sys.path[0] + "/sonos.png")
-            target_image_width = 500
-            _LOGGER.warning("Image URL not available, using default")
+            _LOGGER.warning("Image not available, using default")
 
         # set the image size and text based on whether we are showing track details as well
         if sonos_settings.show_details == True:
