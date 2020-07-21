@@ -13,7 +13,7 @@ import tkinter as tk
 from io import BytesIO
 from tkinter import font as tkFont
 
-from aiohttp import ClientSession
+from aiohttp import ClientError, ClientSession
 from PIL import Image, ImageFile, ImageTk
 
 import demaster
@@ -116,7 +116,7 @@ async def get_image_data(session, url):
                 _LOGGER.warning("Not a valid image type (%s): %s", content_type, url)
                 return None
             return await response.read()
-    except aiohttp.ClientError as err:
+    except ClientError as err:
         _LOGGER.warning("Problem connecting to %s [%s]", url, err)
     except Exception as err:
         _LOGGER.warning("Image failed to load: %s [%s]", url, err)
