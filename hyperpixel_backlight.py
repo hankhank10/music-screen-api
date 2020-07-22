@@ -39,5 +39,6 @@ class Backlight():
 
     def cleanup(self):
         """Return the GPIO setup to initial state."""
-        GPIO.output(BACKLIGHT_PIN, True)
-        GPIO.cleanup()
+        if self.active:
+            GPIO.output(BACKLIGHT_PIN, True)
+            GPIO.cleanup()
