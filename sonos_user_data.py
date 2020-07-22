@@ -7,6 +7,8 @@ import re
 import time
 from urllib.parse import urljoin
 
+from aiohttp import ClientConnectorError
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,9 +78,9 @@ class SonosData():
             try:
                 async with self.session.get(url) as response:
                     obj = await response.json()
-            except ConnectionRefusedError:
+            except ClientConnectorError as err:
                 self.status = "API error"
-                _LOGGER.error("Connection refused. Ensure `node-sonos-http-api` is running.")
+                _LOGGER.error("Connection failed. Ensure `node-sonos-http-api` is running: (%s)", err)
                 return
             except Exception as err:
                 self.status = "API error"
