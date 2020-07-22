@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 try:
     import sonos_settings
 except ImportError:
-    _LOGGER.error("ERROR: Config file not found. Copy 'sonos_config.py.example' to 'sonos_config.py' and edit.")
+    _LOGGER.error("ERROR: Config file not found. Copy 'sonos_settings.py.example' to 'sonos_settings.py' and edit.")
     sys.exit(1)
 
 try:
