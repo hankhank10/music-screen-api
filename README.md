@@ -44,18 +44,16 @@ The above configuration assumes that `node-sonos-http-api` is running on the sam
 
 
 
-# Optional backlight control
+# Backlight control
 
-Thanks to a pull request from [jjlawren](https://github.com/jjlawren) there is now the option to have the backlight of the Hyperpixel turn off when music is not playing.
+Thanks to a pull request from [jjlawren](https://github.com/jjlawren) the backlight of the Hyperpixel will turn off when music is not playing to save power & the environment.
 
-In order to activate this you need run the following commands:
+If running Raspbian / Raspberry Pi OS, this should work out of the box. If running a different distribution, you'll need to run the following commands:
 ```
-pip3 install rpi-backlight
-echo 'SUBSYSTEM=="backlight",RUN+="/bin/chmod 666 /sys/class/backlight/%k/brightness /sys/class/backlight/%k/bl_power"' | sudo tee -a /etc/udev/rules.d/backlight-permissions.rules
+sudo pip3 install RPi.GPIO
+sudo gpasswd -a pi gpio
 
 ```
-
-Full instructions here: https://github.com/linusg/rpi-backlight#installation
 
 # Important notice on Pi Zero
 

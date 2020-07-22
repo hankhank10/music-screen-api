@@ -17,6 +17,7 @@ from aiohttp import ClientError, ClientSession
 from PIL import Image, ImageFile, ImageTk
 
 import demaster
+from hyperpixel_backlight import Backlight
 import scrap
 from sonos_user_data import SonosData
 from webhook_handler import SonosWebhook
@@ -28,13 +29,6 @@ try:
 except ImportError:
     _LOGGER.error("ERROR: Config file not found. Copy 'sonos_settings.py.example' to 'sonos_settings.py' and edit.")
     sys.exit(1)
-
-try:
-    from rpi_backlight import Backlight
-except ImportError:
-    backlight = None
-else:
-    backlight = Backlight()
 
 
 class TkData():
@@ -58,7 +52,6 @@ class TkData():
             else:
                 self.curtain_frame.lift()
             self.is_showing = should_show
-        set_backlight_power(should_show)
         self.root.update()
 
 
@@ -91,19 +84,6 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 ###############################################################################
 # Functions
 
-def set_backlight_power(new_state):
-    """Control the backlight power of the HyperPixel display."""
-    global backlight
-    if backlight:
-        if new_state is False and backlight.power:
-            _LOGGER.debug("Going idle, turning backlight off")
-            if remote_debug_key != "": print("Going idle, turning backlight off")
-        try:
-            backlight.power = new_state
-        except PermissionError:
-            _LOGGER.error("Backlight control failed, ensure permissions are correct: https://github.com/linusg/rpi-backlight#installation")
-            backlight = None
-
 async def get_image_data(session, url):
     """Return image data from a URL if available."""
     if not url:
@@ -122,7 +102,7 @@ async def get_image_data(session, url):
         _LOGGER.warning("Image failed to load: %s [%s]", url, err)
     return None
 
-async def redraw(session, sonos_data, tk_data):
+async def redraw(session, sonos_data, tk_data, backlight):
     """Redraw the screen with current data."""
     if sonos_data.status == "API error":
         if remote_debug_key != "": print ("API error reported fyi")
@@ -142,6 +122,7 @@ async def redraw(session, sonos_data, tk_data):
         if not sonos_data.is_track_new():
             # Ensure the album frame is displayed in case the current track was paused, seeked, etc
             tk_data.show_album(True)
+            backlight.set_power(True)
             return
 
         # slim down the trackname
@@ -177,7 +158,9 @@ async def redraw(session, sonos_data, tk_data):
         tk_data.album_image = ImageTk.PhotoImage(pil_image)
         tk_data.label_albumart.configure(image=tk_data.album_image)
         tk_data.show_album(True)
+        backlight.set_power(True)
     else:
+        backlight.set_power(False)
         tk_data.show_album(False)
         if remote_debug_key != "": print ("Track not playing - doing nothing")
 
@@ -288,8 +271,7 @@ async def main(loop):
     """Main process for script."""
     setup_logging()
 
-    if backlight is None:
-        _LOGGER.error("Backlight control not available, please install the 'rpi_backlight' Python package: https://github.com/linusg/rpi-backlight#installation")
+    backlight = Backlight()
 
     if sonos_settings.room_name_for_highres == "":
         print ("No room name found in sonos_settings.py")
@@ -312,13 +294,13 @@ async def main(loop):
 
     async def webhook_callback():
         """Callback to trigger after webhook is processed."""
-        await redraw(session, sonos_data, tk_data)
+        await redraw(session, sonos_data, tk_data, backlight)
 
     webhook = SonosWebhook(sonos_data, webhook_callback)
     await webhook.listen()
 
     for signame in ('SIGINT', 'SIGTERM', 'SIGQUIT'):
-        loop.add_signal_handler(getattr(signal, signame), lambda: asyncio.ensure_future(cleanup(loop, session, webhook)))
+        loop.add_signal_handler(getattr(signal, signame), lambda: asyncio.ensure_future(cleanup(loop, session, webhook, backlight)))
 
     while True:
         if sonos_data.webhook_active:
@@ -328,13 +310,13 @@ async def main(loop):
 
         if time.time() - sonos_data.last_update > update_interval:
             await sonos_data.refresh()
-            await redraw(session, sonos_data, tk_data)
+            await redraw(session, sonos_data, tk_data, backlight)
         await asyncio.sleep(1)
 
-async def cleanup(loop, session, webhook):
+async def cleanup(loop, session, webhook, backlight):
     """Cleanup tasks on shutdown."""
     _LOGGER.debug("Shutting down")
-    set_backlight_power(True)
+    backlight.cleanup()
     await session.close()
     await webhook.stop()
 
