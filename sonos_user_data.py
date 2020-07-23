@@ -119,7 +119,7 @@ class SonosData():
             _LOGGER.debug("No data returned by the API, skipping update")
             return
 
-        track_id = f"{self.trackname} - {self.artist} ({self.album}) - {timedelta(seconds=self.duration)}"
+        track_id = f"{self.artist} - {self.trackname} ({self.album}) - {timedelta(seconds=self.duration)}"
 
         # Abort update if track has not changed
         if track_id == self.previous_track:
