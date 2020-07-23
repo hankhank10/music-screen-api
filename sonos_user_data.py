@@ -44,6 +44,11 @@ class SonosData():
             return self.last_webhook
         return self.last_poll
 
+    def set_room(self, room):
+        """Change the actively monitored room."""
+        self.room = room
+        _LOGGER.info("Monitoring room: %s", room)
+
     def get_speaker_uri(self, json_data):
         """Return the speaker's URL based on the state JSON."""
         if self._speaker_uri:
