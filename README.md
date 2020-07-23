@@ -66,8 +66,8 @@ The script exposes some REST API endpoints to allow remote control and integrati
 
 Examples:
 ```
-curl http://<IP_OF_HOST>/status
-curl --data "room=Kitchen" http://<IP_OF_HOST>/set-room
+curl http://<IP_OF_HOST>:8080/status
+curl --data "room=Kitchen" http://<IP_OF_HOST>:8080/set-room
 ```
 
 # Important notice on Pi Zero
