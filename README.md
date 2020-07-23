@@ -55,6 +55,20 @@ sudo gpasswd -a pi gpio
 
 ```
 
+# REST API
+
+The script exposes some REST API endpoints to allow remote control and integration options.
+
+| Method | Endpoint | Payload | Example response |
+| `GET` | `/state` || `{"room": "Bedroom", "status": "PLAYING", "trackname": "Living For The City", "artist": "Stevie Wonder", "album": "Innervisions", "duration": 442, "webhook_active": true}` |
+| `POST` | `/set-room` | `{"room": "Kitchen"} | "OK" |
+
+Examples:
+```
+curl http://<IP_OF_HOST>/status
+curl --data "room=Kitchen" http://<IP_OF_HOST>/set-room
+```
+
 # Important notice on Pi Zero
 
 The e-ink script can be got running with a Pi Zero, however you will want to note two things:
