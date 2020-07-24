@@ -4,9 +4,14 @@ Support class to control the backlight power on a HyperPixel display.
 import logging
 import os
 
-import RPi.GPIO as GPIO
-
 _LOGGER = logging.getLogger(__name__)
+
+try:
+    import RPi.GPIO as GPIO
+except ImportError:
+    GPIO = None
+
+
 BACKLIGHT_PIN = 19
 
 
@@ -14,6 +19,11 @@ class Backlight():
 
     def __init__(self, initial_value=False):
         """Initialize the backlight instance."""
+        if not GPIO:
+            self.active = False
+            _LOGGER.error("Backlight control not available, please ensure RPi.GPIO python3 package is installed")
+            return
+
         GPIO.setwarnings(False)
         try:
             GPIO.setmode(GPIO.BCM)
