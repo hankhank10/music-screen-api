@@ -24,6 +24,7 @@ class SonosData():
         self.api_port = api_port
         self.last_poll = 0
         self.last_webhook = 0
+        self.previous_image_uri = None
         self.previous_track = None
         self.room = sonos_room
         self.session = session
@@ -126,18 +127,6 @@ class SonosData():
 
         track_id = f"{self.artist} - {self.trackname} ({self.album}) - {timedelta(seconds=self.duration)}"
 
-        # Abort update if track has not changed
-        if track_id == self.previous_track:
-            return
-
-        _LOGGER.debug("New track: %s", track_id)
-
-        self.previous_track = track_id
-        self._track_is_new = True
-        if self.webhook_active and (self.last_poll - self.last_webhook > WEBHOOK_TIMEOUT):
-            _LOGGER.warning("Webhook activity timed out, falling back to polling")
-            self.webhook_active = False
-
         album_art_uri = obj['currentTrack'].get('albumArtUri', "")
         speaker_uri = self.get_speaker_uri(obj)
         if album_art_uri.startswith('http'):
@@ -146,6 +135,19 @@ class SonosData():
             self.image = f"{speaker_uri}{album_art_uri}"
         else:
             self.image = obj['currentTrack'].get('absoluteAlbumArtUri', "")
+
+        if track_id == self.previous_track and self.image == self.previous_image_uri:
+            return
+
+        _LOGGER.debug("New track: %s", track_id)
+        self.previous_image_uri = self.image
+        self.previous_track = track_id
+        self._track_is_new = True
+
+        if self.webhook_active and (self.last_poll - self.last_webhook > WEBHOOK_TIMEOUT):
+            _LOGGER.warning("Webhook activity timed out, falling back to polling")
+            self.webhook_active = False
+
 
 
 def find_unknown_radio_station_name(filename):
