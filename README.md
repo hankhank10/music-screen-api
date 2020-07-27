@@ -59,15 +59,22 @@ sudo gpasswd -a pi gpio
 
 The script exposes some REST API endpoints to allow remote control and integration options.
 
-| Method | Endpoint | Payload | Example response |
-| :-: | :-: | --- | --- |
-| `GET` | `/state` || `{"room": "Bedroom", "status": "PLAYING", "trackname": "Living For The City", "artist": "Stevie Wonder", "album": "Innervisions", "duration": 442, "webhook_active": true}` |
-| `POST` | `/set-room` | `room` | "OK" |
+| Method | Endpoint       | Payload | Notes |
+| :----: | :------------: | ------- | ----- |
+| `GET`  | `/state`       | None    | Provides current playing state in JSON format. |
+| `POST` | `/set-room`    | `room`: name of room (`str`) | Change actively monitored speaker/room. |
+| `POST` | `/show-detail` | `detail`: 0/1, true/false (`bool`, required)<br/><br/>`timeout`: seconds (`int`, optional)| Show/hide the detail view. Use `timeout` to revert to the full album view after a delay. Has no effect if paused/stopped. |
 
 Examples:
 ```
 curl http://<IP_OF_HOST>:8080/status
+ -> {"room": "Bedroom", "status": "PLAYING", "trackname": "Living For The City", "artist": "Stevie Wonder", "album": "Innervisions", "duration": 442, "webhook_active": true}
+
 curl --data "room=Kitchen" http://<IP_OF_HOST>:8080/set-room
+ -> OK
+ 
+curl --data "detail=true" --data "timeout=5" http://<IP_OF_HOST>:8080/show-detail
+ -> OK
 ```
 
 # Important notice on Pi Zero
