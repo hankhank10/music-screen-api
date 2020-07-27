@@ -2,23 +2,20 @@
 This file is for use with the Pimoroni HyperPixel 4.0 Square (Non Touch) High Res display
 it integrates with your local Sonos sytem to display what is currently playing
 """
-
 import asyncio
 import logging
 import os
 import signal
 import sys
 import time
-import tkinter as tk
 from io import BytesIO
-from tkinter import font as tkFont
 
 from aiohttp import ClientError, ClientSession
-from PIL import Image, ImageFile, ImageTk
+from PIL import Image, ImageFile
 
 import demaster
-from hyperpixel_backlight import Backlight
 import scrap
+from display_controller import DisplayController
 from sonos_user_data import SonosData
 from webhook_handler import SonosWebhook
 
@@ -29,30 +26,6 @@ try:
 except ImportError:
     _LOGGER.error("ERROR: Config file not found. Copy 'sonos_settings.py.example' to 'sonos_settings.py' and edit.")
     sys.exit(1)
-
-
-class TkData():
-
-    def __init__(self, root, album_frame, curtain_frame, detail_text, label_albumart, track_name):
-        """Initialize the object."""
-        self.root = root
-        self.album_frame = album_frame
-        self.album_image = None
-        self.curtain_frame = curtain_frame
-        self.detail_text = detail_text
-        self.label_albumart = label_albumart
-        self.track_name = track_name
-        self.is_showing = False
-
-    def show_album(self, should_show):
-        """Control if album art should be displayed or hidden."""
-        if should_show != self.is_showing:
-            if should_show:
-                self.album_frame.lift()
-            else:
-                self.curtain_frame.lift()
-            self.is_showing = should_show
-        self.root.update()
 
 
 ## Remote debug mode - only activate if you are experiencing issues and want the developer to help
@@ -67,15 +40,7 @@ if remote_debug_key != "":
     scrap.write ("App start")
 
 ###############################################################################
-# Parameters and global variables
-
-# set user variables
-thumbsize = 600,600   # pixel size of thumbnail if you're displaying detail
-screensize = 720,720  # pixel size of HyperPixel 4.0
-fullscreen = True
-thumbwidth = thumbsize[1]
-screenwidth = screensize[1]
-
+# Global variables and setup
 POLLING_INTERVAL = 1
 WEBHOOK_INTERVAL = 60
 
@@ -102,15 +67,12 @@ async def get_image_data(session, url):
         _LOGGER.warning("Image failed to load: %s [%s]", url, err)
     return None
 
-async def redraw(session, sonos_data, tk_data, backlight):
+async def redraw(session, sonos_data, display):
     """Redraw the screen with current data."""
     if sonos_data.status == "API error":
         if remote_debug_key != "": print ("API error reported fyi")
         return
 
-    current_artist = sonos_data.artist
-    current_album = sonos_data.album
-    current_duration = sonos_data.duration
     current_image_url = sonos_data.image
     current_trackname = sonos_data.trackname
     pil_image = None
@@ -121,8 +83,7 @@ async def redraw(session, sonos_data, tk_data, backlight):
 
         if not sonos_data.is_track_new():
             # Ensure the album frame is displayed in case the current track was paused, seeked, etc
-            tk_data.show_album(True)
-            backlight.set_power(True)
+            display.show_album(True)
             return
 
         # slim down the trackname
@@ -140,96 +101,11 @@ async def redraw(session, sonos_data, tk_data, backlight):
             pil_image = Image.open(sys.path[0] + "/sonos.png")
             _LOGGER.warning("Image not available, using default")
 
-        # set the image size and text based on whether we are showing track details as well
-        if sonos_settings.show_details == True:
-            target_image_width = thumbwidth
-            tk_data.track_name.set(current_trackname)
-            detail_text = f"{current_artist} • {current_album}"
-            tk_data.detail_text.set(detail_text)
-        else:
-            target_image_width = screenwidth
-
-        # resize the image
-        wpercent = (target_image_width/float(pil_image.size[0]))
-        hsize = int((float(pil_image.size[1])*float(wpercent)))
-        pil_image = pil_image.resize((target_image_width,hsize), Image.ANTIALIAS)
-
-        # Store the image as an attribute to preserve scope for Tk
-        tk_data.album_image = ImageTk.PhotoImage(pil_image)
-        tk_data.label_albumart.configure(image=tk_data.album_image)
-        tk_data.show_album(True)
-        backlight.set_power(True)
+        display.update(pil_image, current_trackname, sonos_data.artist, sonos_data.album)
+        display.show_album(True)
     else:
-        backlight.set_power(False)
-        tk_data.show_album(False)
+        display.show_album(False)
         if remote_debug_key != "": print ("Track not playing - doing nothing")
-
-
-# Create the main window
-root = tk.Tk()
-root.geometry("720x720")
-root.title("Music Display")
-
-album_frame = tk.Frame(root, bg='black', width=720, height=720)
-curtain_frame = tk.Frame(root, bg='black', width=720, height=720)
-
-album_frame.grid(row=0, column=0, sticky="news")
-curtain_frame.grid(row=0, column=0, sticky="news")
-
-# Set variables
-track_name = tk.StringVar()
-detail_text = tk.StringVar()
-if sonos_settings.show_artist_and_album:
-    track_font = tkFont.Font(family='Helvetica', size=30)
-else:
-    track_font = tkFont.Font(family='Helvetica', size=40)
-image_font = tkFont.Font(size=25)
-detail_font = tkFont.Font(family='Helvetica', size=15)
-
-# Create widgets
-label_albumart = tk.Label(album_frame,
-                        image=None,
-                        font=image_font,
-                        borderwidth=0,
-                        highlightthickness=0,
-                        fg='white',
-                        bg='black')
-label_track = tk.Label(album_frame,
-                        textvariable=track_name,
-                        font=track_font,
-                        fg='white',
-                        bg='black',
-                        wraplength=600,
-                        justify="center")
-label_detail = tk.Label(album_frame,
-                        textvariable=detail_text,
-                        font=detail_font,
-                        fg='white',
-                        bg='black',
-                        wraplength=600,
-                        justify="center")
-
-
-if sonos_settings.show_details == False:
-    label_albumart.place (relx=0.5, rely=0.5, anchor=tk.CENTER)
-
-if sonos_settings.show_details == True:
-    label_albumart.place(x=360, y=thumbsize[1]/2, anchor=tk.CENTER)
-    label_track.place (x=360, y=thumbsize[1]+20, anchor=tk.N)
-
-    label_track.update()
-    height_of_track_label = label_track.winfo_reqheight()
-
-    if sonos_settings.show_artist_and_album:
-        label_detail.place (x=360, y=710, anchor=tk.S)
-
-album_frame.grid_propagate(False)
-
-# Start in fullscreen mode
-root.attributes('-fullscreen', fullscreen)
-root.update()
-
-tk_data = TkData(root, album_frame, curtain_frame, detail_text, label_albumart, track_name)
 
 def setup_logging():
     """Set up logging facilities for the script."""
@@ -270,8 +146,7 @@ def setup_logging():
 async def main(loop):
     """Main process for script."""
     setup_logging()
-
-    backlight = Backlight()
+    display = DisplayController(sonos_settings.show_details, sonos_settings.show_artist_and_album)
 
     if sonos_settings.room_name_for_highres == "":
         print ("No room name found in sonos_settings.py")
@@ -294,13 +169,13 @@ async def main(loop):
 
     async def webhook_callback():
         """Callback to trigger after webhook is processed."""
-        await redraw(session, sonos_data, tk_data, backlight)
+        await redraw(session, sonos_data, display)
 
     webhook = SonosWebhook(sonos_data, webhook_callback)
     await webhook.listen()
 
     for signame in ('SIGINT', 'SIGTERM', 'SIGQUIT'):
-        loop.add_signal_handler(getattr(signal, signame), lambda: asyncio.ensure_future(cleanup(loop, session, webhook, backlight)))
+        loop.add_signal_handler(getattr(signal, signame), lambda: asyncio.ensure_future(cleanup(loop, session, webhook, display)))
 
     while True:
         if sonos_data.webhook_active:
@@ -310,13 +185,13 @@ async def main(loop):
 
         if time.time() - sonos_data.last_update > update_interval:
             await sonos_data.refresh()
-            await redraw(session, sonos_data, tk_data, backlight)
+            await redraw(session, sonos_data, display)
         await asyncio.sleep(1)
 
-async def cleanup(loop, session, webhook, backlight):
+async def cleanup(loop, session, webhook, display):
     """Cleanup tasks on shutdown."""
     _LOGGER.debug("Shutting down")
-    backlight.cleanup()
+    display.cleanup()
     await session.close()
     await webhook.stop()
 
