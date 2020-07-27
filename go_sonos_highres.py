@@ -172,7 +172,7 @@ async def main(loop):
         """Callback to trigger after webhook is processed."""
         await redraw(session, sonos_data, display)
 
-    webhook = SonosWebhook(sonos_data, webhook_callback)
+    webhook = SonosWebhook(display, sonos_data, webhook_callback)
     await webhook.listen()
 
     for signame in ('SIGINT', 'SIGTERM', 'SIGQUIT'):

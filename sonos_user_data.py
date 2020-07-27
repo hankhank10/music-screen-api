@@ -62,6 +62,10 @@ class SonosData():
             _LOGGER.debug("URL for %s found: %s", self.room, self._speaker_uri)
             return self._speaker_uri
 
+    def is_playing(self):
+        """Return True if actively playing."""
+        return self.status == "PLAYING"
+
     def is_track_new(self):
         """Return True if the track has changed since last update."""
         is_new = self._track_is_new

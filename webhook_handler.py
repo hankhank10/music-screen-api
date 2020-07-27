@@ -1,4 +1,6 @@
 """Helper class to handle webhook callbacks from node-sonos-http-api and various REST commands."""
+from distutils.util import strtobool
+
 from aiohttp import web
 
 STATUS_ATTRIBUTES = [
@@ -15,9 +17,10 @@ STATUS_ATTRIBUTES = [
 
 
 class SonosWebhook:
-    def __init__(self, sonos_data, callback):
+    def __init__(self, display, sonos_data, callback):
         """Initialize the webhook handler."""
         self.callback = callback
+        self.display = display
         self.runner = None
         self.sonos_data = sonos_data
 
@@ -29,6 +32,7 @@ class SonosWebhook:
                 web.post("/", self.handle_webhook),
                 web.get("/status", self.get_status),
                 web.post("/set-room", self.set_room),
+                web.post("/show-detail", self.show_detail),
             ]
         )
         self.runner = web.AppRunner(app)
@@ -48,6 +52,23 @@ class SonosWebhook:
         payload = await request.post()
         room = payload.get("room")
         self.sonos_data.set_room(room)
+        return web.Response(text="OK")
+
+    async def show_detail(self, request):
+        """Set the monitored room."""
+        if not self.sonos_data.is_playing():
+            return web.HTTPBadRequest(reason="Not playing")
+
+        payload = await request.post()
+        detail = payload.get("detail")
+        if not detail:
+            return web.HTTPBadRequest(reason="Parameter 'detail' must be provided")
+
+        detail = strtobool(detail)
+        timeout = payload.get("timeout")
+        if timeout:
+            timeout = int(timeout)
+        self.display.show_album(detail, timeout)
         return web.Response(text="OK")
 
     async def handle_webhook(self, request):
