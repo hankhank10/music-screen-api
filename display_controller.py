@@ -18,13 +18,17 @@ THUMB_H = 600
 class DisplayController:  # pylint: disable=too-many-instance-attributes
     """Controller to handle the display hardware and GUI interface."""
 
-    def __init__(self, show_details, show_artist_and_album):
+    def __init__(self, loop, show_details, show_artist_and_album, show_details_timeout):
         """Initialize the display controller."""
+        self.loop = loop
         self.show_details = show_details
         self.show_artist_and_album = show_artist_and_album
+        self.show_details_timeout = show_details_timeout
 
         self.album_image = None
+        self.thumb_image = None
         self.is_showing = False
+        self.details_showing = self.show_details
 
         self.backlight = Backlight()
 
@@ -36,6 +40,11 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
         )
         self.album_frame.grid(row=0, column=0, sticky="news")
 
+        self.detail_frame = tk.Frame(
+            self.root, bg="black", width=SCREEN_W, height=SCREEN_H
+        )
+        self.detail_frame.grid(row=0, column=0, sticky="news")
+
         self.curtain_frame = tk.Frame(
             self.root, bg="black", width=SCREEN_W, height=SCREEN_H
         )
@@ -43,6 +52,7 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
 
         self.track_name = tk.StringVar()
         self.detail_text = tk.StringVar()
+
         if show_artist_and_album:
             track_font = tkFont.Font(family="Helvetica", size=30)
         else:
@@ -57,8 +67,18 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
             fg="white",
             bg="black",
         )
+        self.label_albumart.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+
+        self.label_albumart_detail = tk.Label(
+            self.detail_frame,
+            image=None,
+            borderwidth=0,
+            highlightthickness=0,
+            fg="white",
+            bg="black",
+        )
         label_track = tk.Label(
-            self.album_frame,
+            self.detail_frame,
             textvariable=self.track_name,
             font=track_font,
             fg="white",
@@ -67,7 +87,7 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
             justify="center",
         )
         label_detail = tk.Label(
-            self.album_frame,
+            self.detail_frame,
             textvariable=self.detail_text,
             font=detail_font,
             fg="white",
@@ -75,45 +95,68 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
             wraplength=600,
             justify="center",
         )
-
-        if show_details:
-            self.label_albumart.place(relx=0.5, y=THUMB_H / 2, anchor=tk.CENTER)
-            label_track.place(relx=0.5, y=THUMB_H + 20, anchor=tk.N)
-            if show_artist_and_album:
-                label_detail.place(relx=0.5, y=SCREEN_H - 10, anchor=tk.S)
-        else:
-            self.label_albumart.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+        self.label_albumart_detail.place(relx=0.5, y=THUMB_H / 2, anchor=tk.CENTER)
+        label_track.place(relx=0.5, y=THUMB_H + 20, anchor=tk.N)
+        label_detail.place(relx=0.5, y=SCREEN_H - 10, anchor=tk.S)
 
         self.album_frame.grid_propagate(False)
+        self.detail_frame.grid_propagate(False)
 
         self.root.attributes("-fullscreen", True)
         self.root.update()
 
-    def show_album(self, should_show):
-        """Control if album art should be displayed or hidden."""
-        if should_show != self.is_showing:
-            if should_show:
-                self.album_frame.lift()
-            else:
-                self.curtain_frame.lift()
-            self.is_showing = should_show
+    def show_album(self, show_details=None, detail_timeout=None):
+        """Show album with optional detail display and timeout."""
+        if (
+            self.is_showing
+            and (show_details is None or show_details == self.details_showing)
+            and detail_timeout is None
+        ):
+            return
+
+        if show_details is None:
+            show_details = self.details_showing
+
+            # Only use default timeout if also using default detail visibility
+            if detail_timeout is None:
+                detail_timeout = self.show_details_timeout
+
+        if show_details:
+            self.detail_frame.lift()
+            if detail_timeout:
+                self.loop.call_later(detail_timeout, self.show_album, False)
+        else:
+            self.album_frame.lift()
+
+        self.is_showing = True
+        self.details_showing = show_details
         self.root.update()
-        self.backlight.set_power(should_show)
+        self.backlight.set_power(True)
+
+    def hide_album(self):
+        """Hide album if showing."""
+        if not self.is_showing:
+            return
+
+        self.backlight.set_power(False)
+        self.is_showing = False
+        self.curtain_frame.lift()
+        self.root.update()
 
     def update(self, image, track, artist, album):
         """Update displayed image and text."""
-        if self.show_details:
-            target_image_width = THUMB_W
-        else:
-            target_image_width = SCREEN_W
 
-        wpercent = target_image_width / float(image.size[0])
-        hsize = int(float(image.size[1]) * float(wpercent))
-        image = image.resize((target_image_width, hsize))
+        def resize_image(image, length):
+            """Resizes the image, assumes square image."""
+            image = image.resize((length, length))
+            return ImageTk.PhotoImage(image)
 
-        # Store the image as an attribute to preserve scope for Tk
-        self.album_image = ImageTk.PhotoImage(image)
+        # Store the images as attributes to preserve scope for Tk
+        self.album_image = resize_image(image, SCREEN_W)
+        self.thumb_image = resize_image(image, THUMB_W)
+
         self.label_albumart.configure(image=self.album_image)
+        self.label_albumart_detail.configure(image=self.thumb_image)
 
         self.track_name.set(track)
 

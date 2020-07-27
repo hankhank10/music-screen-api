@@ -27,6 +27,9 @@ room_name_for_highres = ""
 # Display track name in addition to album art
 show_details = False
 
+# Seconds to show detail view on track changes before returning to full-screen album art. Comment out to disable feature.
+show_details_timeout = 10
+
 # Also display artist and album with track name. Ignored if 'show_details' is False.
 show_artist_and_album = True
 

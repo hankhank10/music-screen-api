@@ -83,7 +83,7 @@ async def redraw(session, sonos_data, display):
 
         if not sonos_data.is_track_new():
             # Ensure the album frame is displayed in case the current track was paused, seeked, etc
-            display.show_album(True)
+            display.show_album()
             return
 
         # slim down the trackname
@@ -102,9 +102,9 @@ async def redraw(session, sonos_data, display):
             _LOGGER.warning("Image not available, using default")
 
         display.update(pil_image, current_trackname, sonos_data.artist, sonos_data.album)
-        display.show_album(True)
+        display.show_album()
     else:
-        display.show_album(False)
+        display.hide_album()
         if remote_debug_key != "": print ("Track not playing - doing nothing")
 
 def setup_logging():
@@ -146,7 +146,8 @@ def setup_logging():
 async def main(loop):
     """Main process for script."""
     setup_logging()
-    display = DisplayController(sonos_settings.show_details, sonos_settings.show_artist_and_album)
+    show_details_timeout = getattr(sonos_settings, "show_details_timeout", None)
+    display = DisplayController(loop, sonos_settings.show_details, sonos_settings.show_artist_and_album, show_details_timeout)
 
     if sonos_settings.room_name_for_highres == "":
         print ("No room name found in sonos_settings.py")
