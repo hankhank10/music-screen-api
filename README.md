@@ -14,8 +14,9 @@ Note: this replaces the now deprecated [ink-music-stats](https://github.com/hank
 
 # Required hardware
 
-Raspberry Pi 3 or 4
-Note: a Pi Zero WH can be made to run the e-ink version - BUT see below for note on how to get this working
+Raspberry Pi 3 or 4 are recommended. The Pi 3 A+ is a smaller form factor which fits behind the HyperPixel Square display nicely as long as no more than one USB port is needed for other projects.
+
+Raspberry Pi Zero W can be used with some stipulations noted [here](#important-notice-on-pi-zero).
 
 [Pimoroni inky wHAT](https://shop.pimoroni.com/products/inky-what?variant=21214020436051)
 
@@ -27,6 +28,11 @@ I have put together step-by-step basic instructions:
 
 - [e-INK version here](https://www.hackster.io/mark-hank/currently-playing-music-on-e-ink-display-310645)
 - [High res version here](https://www.hackster.io/mark-hank/sonos-album-art-on-raspberry-pi-screen-5b0012)
+
+_Note_: The high res version guide is slightly outdated and requires additional dependencies. Those can be installed with:
+```
+sudo pip3 install aiohttp RPi.GPIO
+```
 
 # Webhook updates
 
@@ -79,6 +85,14 @@ curl --data "detail=true" --data "timeout=5" http://<IP_OF_HOST>:8080/show-detai
 
 # Important notice on Pi Zero
 
+### HyperPixel version
+
+A Pi Zero W can run both `node-sonos-http-api` and the full color album art version as long as [webhooks](#webhook-updates) have been properly enabled. It updates slightly slower (1-2 seconds) than a Pi 3/4.
+
+### E-ink version
+
+_Note: The e-ink version has not been updated to use [webhooks](#webhook-updates) which the HyperPixel version uses and requires the performance tweaks below._
+
 The e-ink script can be got running with a Pi Zero, however you will want to note two things:
 
 1. Save yourself a headache and ensure you're getting a Pi Zero WH (ie wireless and with headers pre-soldered)
@@ -86,8 +100,6 @@ The e-ink script can be got running with a Pi Zero, however you will want to not
 2. It runs pretty poorly on a Pi Zero due to the processing requirements. Actually this script runs fine, but it can struggle to do this and the http-sonos-api consistently. If you are set on running on a Pi Zero then either have the sonos-api running on a different local machine (and redirect to that IP address in sonos_settings.py) or set the Pi_Zero flag in sonos_settings.py to True (this slows down the frequency of requests)
 
 (Thanks to reddit user u/Burulambie for helping me trouble shoot this)
-
-I wouldn't recommend running the high res colour version from a Pi Zero.
 
 # Important notice on "demaster"
 
