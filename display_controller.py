@@ -27,7 +27,6 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
 
         self.album_image = None
         self.thumb_image = None
-        self.is_showing = False
         self.timeout_future = None
 
         self.backlight = Backlight()
@@ -120,17 +119,12 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
         else:
             self.album_frame.lift()
 
-        self.is_showing = True
         self.root.update()
         self.backlight.set_power(True)
 
     def hide_album(self):
         """Hide album if showing."""
-        if not self.is_showing:
-            return
-
         self.backlight.set_power(False)
-        self.is_showing = False
         self.curtain_frame.lift()
         self.root.update()
 
