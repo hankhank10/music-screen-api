@@ -19,6 +19,8 @@ class Backlight():
 
     def __init__(self, initial_value=False):
         """Initialize the backlight instance."""
+        self.power = None
+
         if not GPIO:
             self.active = False
             _LOGGER.error("Backlight control not available, please ensure RPi.GPIO python3 package is installed")
@@ -35,7 +37,7 @@ class Backlight():
             _LOGGER.error("Backlight control not available, please ensure '%s' is part of group 'gpio'.", username)
             _LOGGER.error("  To add user to group: `sudo gpasswd -a %s gpio`", username)
         else:
-            self.power = initial_value
+            self.set_power(initial_value)
 
     def set_power(self, new_state):
         """Control the backlight power of the HyperPixel display."""
