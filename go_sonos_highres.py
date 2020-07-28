@@ -83,7 +83,8 @@ async def redraw(session, sonos_data, display):
 
         if not sonos_data.is_track_new():
             # Ensure the album frame is displayed in case the current track was paused, seeked, etc
-            display.show_album()
+            if not display.is_showing:
+                display.show_album()
             return
 
         # slim down the trackname
