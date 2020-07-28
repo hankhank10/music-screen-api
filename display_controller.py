@@ -133,7 +133,7 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
 
         def resize_image(image, length):
             """Resizes the image, assumes square image."""
-            image = image.resize((length, length))
+            image = image.resize((length, length), ImageTk.Image.ANTIALIAS)
             return ImageTk.PhotoImage(image)
 
         # Store the images as attributes to preserve scope for Tk
