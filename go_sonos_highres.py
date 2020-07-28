@@ -102,7 +102,6 @@ async def redraw(session, sonos_data, display):
             _LOGGER.warning("Image not available, using default")
 
         display.update(pil_image, current_trackname, sonos_data.artist, sonos_data.album)
-        display.show_album()
     else:
         display.hide_album()
         if remote_debug_key != "": print ("Track not playing - doing nothing")

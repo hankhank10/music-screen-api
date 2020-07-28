@@ -28,7 +28,7 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
         self.album_image = None
         self.thumb_image = None
         self.is_showing = False
-        self.details_showing = self.show_details
+        self.timeout_future = None
 
         self.backlight = Backlight()
 
@@ -107,29 +107,20 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
 
     def show_album(self, show_details=None, detail_timeout=None):
         """Show album with optional detail display and timeout."""
-        if (
-            self.is_showing
-            and (show_details is None or show_details == self.details_showing)
-            and detail_timeout is None
-        ):
-            return
+        def handle_timeout():
+            self.timeout_future = None
+            self.show_album(show_details=False)
 
-        if show_details is None:
-            show_details = self.details_showing
-
-            # Only use default timeout if also using default detail visibility
-            if detail_timeout is None:
-                detail_timeout = self.show_details_timeout
-
-        if show_details:
+        if show_details is None and detail_timeout is None:
+            self.curtain_frame.lower()
+        elif show_details:
             self.detail_frame.lift()
-            if detail_timeout:
-                self.loop.call_later(detail_timeout, self.show_album, False)
+            if detail_timeout and not self.timeout_future:
+                self.timeout_future = self.loop.call_later(detail_timeout, handle_timeout)
         else:
             self.album_frame.lift()
 
         self.is_showing = True
-        self.details_showing = show_details
         self.root.update()
         self.backlight.set_power(True)
 
@@ -165,6 +156,8 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
             if album:
                 detail_text += f" • {album}"
             self.detail_text.set(detail_text)
+
+        self.show_album(self.show_details, self.show_details_timeout)
 
     def cleanup(self):
         """Run cleanup actions."""
