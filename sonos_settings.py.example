@@ -10,7 +10,7 @@ sonos_http_api_port = "5005"
 log_file = "~/music-screen-api.log"
 
 # One of ERROR, WARNING, INFO, DEBUG (in order of least to most verbose)
-log_level = "DEBUG"
+log_level = "INFO"
 
 # Crop song names to remove nonsense such as "Remastered" or "live at"
 demaster = True

@@ -143,7 +143,7 @@ class SonosData():
         if track_id == self.previous_track and self.image == self.previous_image_uri:
             return
 
-        _LOGGER.debug("New track: %s", track_id)
+        _LOGGER.info("New track: %s", track_id)
         self.previous_image_uri = self.image
         self.previous_track = track_id
         self._track_is_new = True

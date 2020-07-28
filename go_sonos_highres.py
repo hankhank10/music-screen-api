@@ -109,7 +109,7 @@ async def redraw(session, sonos_data, display):
 
 def setup_logging():
     """Set up logging facilities for the script."""
-    log_level = getattr(sonos_settings, "log_level", logging.DEBUG)
+    log_level = getattr(sonos_settings, "log_level", logging.INFO)
     log_file = getattr(sonos_settings, "log_file", None)
     if log_file:
         log_path = os.path.expanduser(log_file)
