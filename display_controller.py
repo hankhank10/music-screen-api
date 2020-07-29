@@ -153,12 +153,14 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
         self.label_albumart.configure(image=self.album_image)
         self.label_albumart_detail.configure(image=self.thumb_image)
 
-        self.track_name.set(sonos_data.trackname)
+        self.track_name.set(sonos_data.trackname or sonos_data.station)
 
         if self.show_artist_and_album:
             detail_text = sonos_data.artist
             if sonos_data.album:
                 detail_text += f" • {sonos_data.album}"
+            if sonos_data.station and not sonos_data.trackname:
+                detail_text += f"\n{sonos_data.station}"
             self.detail_text.set(detail_text)
 
         self.show_album(self.show_details, self.show_details_timeout)

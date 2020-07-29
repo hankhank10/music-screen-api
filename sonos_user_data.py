@@ -32,9 +32,12 @@ class SonosData():
         self._speaker_uri = None
         self._track_is_new = True
 
+        self.type = ""
+        self.raw_trackname = ""
         self.trackname = ""
         self.artist = ""
         self.album = ""
+        self.station = ""
         self.duration = 0
         self.image_uri = ""
         self.status = ""
@@ -103,31 +106,27 @@ class SonosData():
         if self.status != "PLAYING":
             return
 
-        type_playing = obj['currentTrack']['type']
+        self.type = obj['currentTrack']['type']
+        self.raw_trackname = obj['currentTrack'].get('title', "")
         self.artist = obj['currentTrack'].get('artist', "")
         self.album = obj['currentTrack'].get('album', "")
+        self.station = obj['currentTrack'].get('stationName', "")
         self.duration = obj['currentTrack']['duration']
 
-        # detect if its coming from Sonos radio, in which case forget that it's radio and pretend it's a normal track
-        uri = obj['currentTrack']['uri']
-        if uri.startswith('x-sonosapi-radio:sonos'):
-            type_playing = "sonos_radio"
-
-        if type_playing == "radio":
-
-            if 'stationName' in obj['currentTrack']:
-                # if Sonos has given us a nice station name then use that
-                self.trackname = obj['currentTrack']['stationName']
-            else:
-                # if not then try to look it up (usually because its played from Alexa)
-                self.trackname = str(find_unknown_radio_station_name(obj['currentTrack']['title']))
-        else:
-            self.trackname = obj['currentTrack'].get('title', "")
-
         # Abort update if all data is empty
-        if not any([self.album, self.artist, self.duration, self.trackname]):
+        if not any([self.album, self.artist, self.duration, self.station, self.raw_trackname]):
             _LOGGER.debug("No data returned by the API, skipping update")
             return
+
+        if self.type == "radio" and not self.station:
+            # if not then try to look it up (usually because its played from Alexa)
+            self.station = find_unknown_radio_station_name(self.raw_trackname)
+
+        # Clear uninteresting tracknames
+        if self.raw_trackname.startswith("x-sonosapi-") or self.raw_trackname.endswith(".m3u8"):
+            self.trackname = ""
+        else:
+            self.trackname = self.raw_trackname
 
         # Artist seems to always be provided, but other fields vary
         track_id = self.artist
@@ -137,6 +136,8 @@ class SonosData():
             track_id += f" ({self.album})"
         if self.duration:
             track_id += f" - {timedelta(seconds=self.duration)}"
+        if self.station:
+            track_id += f" [{self.station}]"
 
         album_art_uri = obj['currentTrack'].get('albumArtUri', "")
         speaker_uri = self.get_speaker_uri(obj)
