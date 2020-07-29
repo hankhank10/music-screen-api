@@ -129,7 +129,14 @@ class SonosData():
             _LOGGER.debug("No data returned by the API, skipping update")
             return
 
-        track_id = f"{self.artist} - {self.trackname} ({self.album}) - {timedelta(seconds=self.duration)}"
+        # Artist seems to always be provided, but other fields vary
+        track_id = self.artist
+        if self.trackname:
+            track_id += f" - {self.trackname}"
+        if self.album:
+            track_id += f" ({self.album})"
+        if self.duration:
+            track_id += f" - {timedelta(seconds=self.duration)}"
 
         album_art_uri = obj['currentTrack'].get('albumArtUri', "")
         speaker_uri = self.get_speaker_uri(obj)
@@ -140,10 +147,13 @@ class SonosData():
         else:
             self.image_uri = obj['currentTrack'].get('absoluteAlbumArtUri', "")
 
-        if track_id == self.previous_track and self.image_uri == self.previous_image_uri:
+        if track_id != self.previous_track:
+            _LOGGER.info("New track: %s", track_id)
+        elif self.image_uri != self.previous_image_uri:
+            _LOGGER.debug("Updated image URI: %s", self.image_uri)
+        else:
             return
 
-        _LOGGER.info("New track: %s", track_id)
         self.previous_image_uri = self.image_uri
         self.previous_track = track_id
         self._track_is_new = True
