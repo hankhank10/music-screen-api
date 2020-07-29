@@ -1,19 +1,8 @@
 """Helper class to handle webhook callbacks from node-sonos-http-api and various REST commands."""
+import copy
 from distutils.util import strtobool
 
 from aiohttp import web
-
-STATUS_ATTRIBUTES = [
-    "room",
-    "status",
-    "trackname",
-    "artist",
-    "album",
-    "duration",
-    "last_poll",
-    "last_webhook",
-    "webhook_active",
-]
 
 
 class SonosWebhook:
@@ -42,9 +31,8 @@ class SonosWebhook:
 
     async def get_status(self, request):
         """Report the status of the application."""
-        payload = {}
-        for attr in STATUS_ATTRIBUTES:
-            payload[attr] = getattr(self.sonos_data, attr)
+        payload = copy.copy(vars(self.sonos_data))
+        payload.pop("session")
         return web.json_response(payload)
 
     async def set_room(self, request):
