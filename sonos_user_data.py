@@ -36,7 +36,7 @@ class SonosData():
         self.artist = ""
         self.album = ""
         self.duration = 0
-        self.image = ""
+        self.image_uri = ""
         self.status = ""
 
     @property
@@ -134,17 +134,17 @@ class SonosData():
         album_art_uri = obj['currentTrack'].get('albumArtUri', "")
         speaker_uri = self.get_speaker_uri(obj)
         if album_art_uri.startswith('http'):
-            self.image = album_art_uri
+            self.image_uri = album_art_uri
         elif speaker_uri and album_art_uri:
-            self.image = f"{speaker_uri}{album_art_uri}"
+            self.image_uri = f"{speaker_uri}{album_art_uri}"
         else:
-            self.image = obj['currentTrack'].get('absoluteAlbumArtUri', "")
+            self.image_uri = obj['currentTrack'].get('absoluteAlbumArtUri', "")
 
-        if track_id == self.previous_track and self.image == self.previous_image_uri:
+        if track_id == self.previous_track and self.image_uri == self.previous_image_uri:
             return
 
         _LOGGER.info("New track: %s", track_id)
-        self.previous_image_uri = self.image
+        self.previous_image_uri = self.image_uri
         self.previous_track = track_id
         self._track_is_new = True
 

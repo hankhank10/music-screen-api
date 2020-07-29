@@ -138,7 +138,7 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
         self.curtain_frame.lift()
         self.root.update()
 
-    def update(self, image, track, artist, album):
+    def update(self, image, sonos_data):
         """Update displayed image and text."""
 
         def resize_image(image, length):
@@ -153,12 +153,12 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
         self.label_albumart.configure(image=self.album_image)
         self.label_albumart_detail.configure(image=self.thumb_image)
 
-        self.track_name.set(track)
+        self.track_name.set(sonos_data.trackname)
 
         if self.show_artist_and_album:
-            detail_text = artist
-            if album:
-                detail_text += f" • {album}"
+            detail_text = sonos_data.artist
+            if sonos_data.album:
+                detail_text += f" • {sonos_data.album}"
             self.detail_text.set(detail_text)
 
         self.show_album(self.show_details, self.show_details_timeout)

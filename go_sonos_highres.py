@@ -73,8 +73,6 @@ async def redraw(session, sonos_data, display):
         if remote_debug_key != "": print ("API error reported fyi")
         return
 
-    current_image_url = sonos_data.image
-    current_trackname = sonos_data.trackname
     pil_image = None
 
     # see if something is playing
@@ -90,11 +88,11 @@ async def redraw(session, sonos_data, display):
         # slim down the trackname
         if sonos_settings.demaster:
             offline = not getattr(sonos_settings, "demaster_query_cloud", False)
-            current_trackname = demaster.strip_name(current_trackname, offline)
-            if remote_debug_key != "": print ("Demastered to " + current_trackname)
-            _LOGGER.debug("Demastered to %s", current_trackname)
+            sonos_data.trackname = demaster.strip_name(sonos_data.trackname, offline)
+            if remote_debug_key != "": print ("Demastered to " + sonos_data.trackname)
+            _LOGGER.debug("Demastered to %s", sonos_data.trackname)
 
-        image_data = await get_image_data(session, current_image_url)
+        image_data = await get_image_data(session, sonos_data.image_uri)
         if image_data:
             pil_image = Image.open(BytesIO(image_data))
 
@@ -102,7 +100,7 @@ async def redraw(session, sonos_data, display):
             pil_image = Image.open(sys.path[0] + "/sonos.png")
             _LOGGER.warning("Image not available, using default")
 
-        display.update(pil_image, current_trackname, sonos_data.artist, sonos_data.album)
+        display.update(pil_image, sonos_data)
     else:
         display.hide_album()
         if remote_debug_key != "": print ("Track not playing - doing nothing")
