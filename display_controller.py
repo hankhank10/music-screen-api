@@ -159,7 +159,7 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
             detail_text = sonos_data.artist
             if sonos_data.album:
                 detail_text += f" • {sonos_data.album}"
-            if sonos_data.station and not sonos_data.trackname:
+            if sonos_data.station and sonos_data.trackname:
                 detail_text += f"\n{sonos_data.station}"
             self.detail_text.set(detail_text)
 
