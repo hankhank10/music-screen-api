@@ -153,16 +153,26 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
         self.label_albumart.configure(image=self.album_image)
         self.label_albumart_detail.configure(image=self.thumb_image)
 
-        self.track_name.set(sonos_data.trackname or sonos_data.station)
+        detail_prefix = None
+        detail_suffix = sonos_data.album or None
 
-        if self.show_artist_and_album:
-            detail_text = sonos_data.artist
-            if sonos_data.album:
-                detail_text += f" • {sonos_data.album}"
-            if sonos_data.station and sonos_data.trackname:
-                detail_text += f"\n{sonos_data.station}"
-            self.detail_text.set(detail_text)
+        if sonos_data.type == "radio":
+            display_trackname = sonos_data.trackname or sonos_data.station
+            self.track_name.set(display_trackname)
 
+            if self.show_artist_and_album:
+                if sonos_data.artist != display_trackname:
+                    detail_prefix = sonos_data.artist
+
+        else:
+            display_trackname = sonos_data.trackname
+            if self.show_artist_and_album:
+                detail_prefix = sonos_data.artist
+
+        detail_text = " • ".join(filter(None, [detail_prefix, detail_suffix]))
+        self.track_name.set(display_trackname)
+        self.detail_text.set(detail_text)
+        self.root.update_idletasks()
         self.show_album(self.show_details, self.show_details_timeout)
 
     def cleanup(self):
