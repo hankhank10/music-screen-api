@@ -29,6 +29,16 @@ I have put together step-by-step basic instructions:
 - [e-INK version here](https://www.hackster.io/mark-hank/currently-playing-music-on-e-ink-display-310645)
 - [High res version here](https://www.hackster.io/mark-hank/sonos-album-art-on-raspberry-pi-screen-5b0012)
 
+# Key dependencies to load if you know what you're doing and don't want to follow all the steps above
+
+````
+sudo apt install python3-tk
+sudo apt install python3-pil 
+sudo apt install python3-pil.imagetk
+sudo pip3 install requests
+sudo pip3 install aiohttp RPi.GPIO
+````
+
 # Webhook updates
 
 Enabling webhook support in the `node-sonos-http-api` configuration is **strongly** recommended. Without this enabled, the script must repeatedly poll to check for updates.
