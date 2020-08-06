@@ -14,8 +14,9 @@ Note: this replaces the now deprecated [ink-music-stats](https://github.com/hank
 
 # Required hardware
 
-Raspberry Pi 3 or 4
-Note: a Pi Zero WH can be made to run the e-ink version - BUT see below for note on how to get this working
+Raspberry Pi 3 or 4 are recommended. The Pi 3 A+ is a smaller form factor which fits behind the HyperPixel Square display nicely as long as no more than one USB port is needed for other projects.
+
+Raspberry Pi Zero W can be used with some stipulations noted [here](#important-notice-on-pi-zero).
 
 [Pimoroni inky wHAT](https://shop.pimoroni.com/products/inky-what?variant=21214020436051)
 
@@ -28,20 +29,69 @@ I have put together step-by-step basic instructions:
 - [e-INK version here](https://www.hackster.io/mark-hank/currently-playing-music-on-e-ink-display-310645)
 - [High res version here](https://www.hackster.io/mark-hank/sonos-album-art-on-raspberry-pi-screen-5b0012)
 
-# Optional backlight control
-
-Thanks to a pull request from [jjlawren](https://github.com/jjlawren) there is now the option to have the backlight of the Hyperpixel turn off when music is not playing.
-
-In order to activate this you need run the following commands:
+_Note_: The high res version guide is slightly outdated and requires additional dependencies. Those can be installed with:
 ```
-pip3 install rpi-backlight
-echo 'SUBSYSTEM=="backlight",RUN+="/bin/chmod 666 /sys/class/backlight/%k/brightness /sys/class/backlight/%k/bl_power"' | sudo tee -a /etc/udev/rules.d/backlight-permissions.rules
-
+sudo pip3 install aiohttp RPi.GPIO
 ```
 
-Full instructions here: https://github.com/linusg/rpi-backlight#installation
+# Webhook updates
+
+Enabling webhook support in the `node-sonos-http-api` configuration is **strongly** recommended. Without this enabled, the script must repeatedly poll to check for updates.
+
+Webhook support for `node-sonos-http-api` can be enabled by updating/creating the `settings.json` configuration file located in the base of the `node-sonos-http-api/` directory:
+```
+{
+  "webhook": "http://localhost:8080/"
+}
+```
+_Note_: This file does not exist by default and you may need to create it. Also note that the `settings.js` file is part of the `node-sonos-http-api` code and should **not** be modified.
+
+The above configuration assumes that `node-sonos-http-api` is running on the same machine. If running on a different machine, replace `localhost` with the IP of the host running this script.
+
+
+
+# Backlight control
+
+Thanks to a pull request from [jjlawren](https://github.com/jjlawren) the backlight of the Hyperpixel will turn off when music is not playing to save power & the environment.
+
+If running Raspbian / Raspberry Pi OS, this should work out of the box. If running a different distribution, you'll need to run the following commands:
+```
+sudo pip3 install RPi.GPIO
+sudo gpasswd -a pi gpio
+
+```
+
+# REST API
+
+The script exposes some REST API endpoints to allow remote control and integration options.
+
+| Method | Endpoint       | Payload | Notes |
+| :----: | :------------: | ------- | ----- |
+| `GET`  | `/state`       | None    | Provides current playing state in JSON format. |
+| `POST` | `/set-room`    | `room`: name of room (`str`) | Change actively monitored speaker/room. |
+| `POST` | `/show-detail` | `detail`: 0/1, true/false (`bool`, required)<br/><br/>`timeout`: seconds (`int`, optional)| Show/hide the detail view. Use `timeout` to revert to the full album view after a delay. Has no effect if paused/stopped. |
+
+Examples:
+```
+curl http://<IP_OF_HOST>:8080/status
+ -> {"room": "Bedroom", "status": "PLAYING", "trackname": "Living For The City", "artist": "Stevie Wonder", "album": "Innervisions", "duration": 442, "webhook_active": true}
+
+curl --data "room=Kitchen" http://<IP_OF_HOST>:8080/set-room
+ -> OK
+ 
+curl --data "detail=true" --data "timeout=5" http://<IP_OF_HOST>:8080/show-detail
+ -> OK
+```
 
 # Important notice on Pi Zero
+
+### HyperPixel version
+
+A Pi Zero W can run both `node-sonos-http-api` and the full color album art version as long as [webhooks](#webhook-updates) have been properly enabled. It updates slightly slower (1-2 seconds) than a Pi 3/4.
+
+### E-ink version
+
+_Note: The e-ink version has not been updated to use [webhooks](#webhook-updates) which the HyperPixel version uses and requires the performance tweaks below._
 
 The e-ink script can be got running with a Pi Zero, however you will want to note two things:
 
@@ -51,8 +101,6 @@ The e-ink script can be got running with a Pi Zero, however you will want to not
 
 (Thanks to reddit user u/Burulambie for helping me trouble shoot this)
 
-I wouldn't recommend running the high res colour version from a Pi Zero.
-
 # Important notice on "demaster"
 
 This script uses my ["demaster" script](https://github.com/hankhank10/demaster) to remove some of the nonsense from the end of track names which make them difficult to display (eg - Live at etc, (Remastered 2011), etc). This is highly recommended for displaying on a screen as otherwise it becomes unweildy to read the track names.
@@ -61,4 +109,4 @@ Two important points for you to note here:
 
 1. If you want to turn this off then you can by opening sonossettings.py and changing demaster to False. This will then show the full track name as reported by Sonos.
 
-2. Demaster makes use of an online API to efficiently reduce the track names and ensure that it is able to learn from previous amendments. This means that in default mode track names are sent to a remote server when they are played to get the shorter name. No personally identifying information is associated with this API request but if you're uncomfortable with this then rather than disabling demaster entirely then you can set it to run in offline only mode by setting the offline_only_mode flag in demaster.py to True.  This means that the local script will attempt to do some limited reduction of nonsense in track names, but you won't benefit from the latest algorithm to do this - but it's still a lot better than nothing if you're worried about privacy.
+2. Demaster makes use of an online API to efficiently reduce the track names and ensure that it is able to learn from previous amendments. This means that in default mode track names are sent to a remote server when they are played to get the shorter name. No personally identifying information is associated with this API request but if you're uncomfortable with this then rather than disabling demaster entirely then you can set it to run in offline only mode by setting the `demaster_query_cloud` option in your `sonos_settings.py` to `False`.  This means that the local script will attempt to do some limited reduction of nonsense in track names, but you won't benefit from the latest algorithm to do this - but it's still a lot better than nothing if you're worried about privacy.

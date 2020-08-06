@@ -1,27 +1,32 @@
-# This file is for use with the Pimoroni HyperPixel 4.0 Square (Non Touch) High Res display
-# it integrates with your local Sonos sytem to display what is currently playing
-
-import atexit
-import tkinter as tk
-import tkinter.font as tkFont
-import time
-import sys
-import sonos_user_data
-import sonos_settings
-import requests
-from io import BytesIO
-from PIL import ImageTk, Image, ImageFile
+"""
+This file is for use with the Pimoroni HyperPixel 4.0 Square (Non Touch) High Res display
+it integrates with your local Sonos sytem to display what is currently playing
+"""
+import asyncio
+import logging
 import os
+import signal
+import sys
+import time
+from io import BytesIO
+
+from aiohttp import ClientError, ClientSession
+from PIL import Image, ImageFile
+
 import demaster
 import scrap
+from display_controller import DisplayController
+from sonos_user_data import SonosData
+from webhook_handler import SonosWebhook
+
+_LOGGER = logging.getLogger(__name__)
 
 try:
-    from rpi_backlight import Backlight
+    import sonos_settings
 except ImportError:
-    print ("Backlight control not available, please install the 'rpi_backlight' Python package: https://github.com/linusg/rpi-backlight#installation")
-    backlight = None
-else:
-    backlight = Backlight()
+    _LOGGER.error("ERROR: Config file not found. Copy 'sonos_settings.py.example' to 'sonos_settings.py' and edit.")
+    sys.exit(1)
+
 
 ## Remote debug mode - only activate if you are experiencing issues and want the developer to help
 remote_debug_key = ""
@@ -35,201 +40,169 @@ if remote_debug_key != "":
     scrap.write ("App start")
 
 ###############################################################################
-# Parameters and global variables
-
-# set user variables
-thumbsize = 600,600   # pixel size of thumbnail if you're displaying detail
-screensize = 720,720  # pixel size of HyperPixel 4.0
-fullscreen = True
-
-# Declare global variables (don't mess with these)
-root = None
-frame = None
-track_name = None
-detail_text = None
-tk_image = None
-font_size = 0
-previous_polled_trackname = ""
-thumbwidth = thumbsize[1]
-screenwidth = screensize[1]
-sonos_room = None
+# Global variables and setup
+POLLING_INTERVAL = 1
+WEBHOOK_INTERVAL = 60
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 ###############################################################################
 # Functions
 
-def set_backlight_power(new_state):
-    """Control the backlight power of the HyperPixel display."""
-    global backlight
-    if backlight:
-        if new_state is False and backlight.power:
-            if remote_debug_key != "": print("Going idle, turning backlight off")
-        try:
-            backlight.power = new_state
-        except PermissionError:
-            print("Backlight control failed, ensure permissions are correct: https://github.com/linusg/rpi-backlight#installation")
-            backlight = None
+async def get_image_data(session, url):
+    """Return image data from a URL if available."""
+    if not url:
+        return None
 
-# Read values from the sensors at regular intervals
-def update():
+    try:
+        async with session.get(url) as response:
+            content_type = response.headers.get('content-type')
+            if content_type and not content_type.startswith('image/'):
+                _LOGGER.warning("Not a valid image type (%s): %s", content_type, url)
+                return None
+            return await response.read()
+    except ClientError as err:
+        _LOGGER.warning("Problem connecting to %s [%s]", url, err)
+    except Exception as err:
+        _LOGGER.warning("Image failed to load: %s [%s]", url, err)
+    return None
 
-    global root
-    global track_name
-    global tk_image
-    global previous_polled_trackname
+async def redraw(session, sonos_data, display):
+    """Redraw the screen with current data."""
+    if sonos_data.status == "API error":
+        if remote_debug_key != "": print ("API error reported fyi")
+        return
 
-    # Get sonos data from API
-    current_trackname, current_artist, current_album, current_image, playing_status = sonos_user_data.current(sonos_room)
+    pil_image = None
 
     # see if something is playing
-    if playing_status == "PLAYING":
+    if sonos_data.status == "PLAYING":
         if remote_debug_key != "": print ("Music playing")
 
-        # check whether the track has changed - don't bother updating everything if not
-        if current_trackname != previous_polled_trackname:
-            if remote_debug_key != "": print ("Current track " + current_trackname + " is not same as previous track " + previous_polled_trackname)
+        if not sonos_data.is_track_new():
+            # Ensure the album frame is displayed in case the current track was paused, seeked, etc
+            if not display.is_showing:
+                display.show_album()
+            return
 
-            # update previous trackname so we know what has changed in future
-            previous_polled_trackname = current_trackname
+        # slim down the trackname
+        if sonos_settings.demaster:
+            offline = not getattr(sonos_settings, "demaster_query_cloud", False)
+            sonos_data.trackname = demaster.strip_name(sonos_data.trackname, offline)
+            if remote_debug_key != "": print ("Demastered to " + sonos_data.trackname)
+            _LOGGER.debug("Demastered to %s", sonos_data.trackname)
 
-            # slim down the trackname
-            if sonos_settings.demaster:
-                current_trackname = demaster.strip_name (current_trackname)
-                if remote_debug_key != "": print ("Demastered to " + current_trackname)
+        image_data = await get_image_data(session, sonos_data.image_uri)
+        if image_data:
+            pil_image = Image.open(BytesIO(image_data))
 
-            # set the details we need from the API into variables
-            track_name.set(current_trackname)
-            detail_text.set(current_artist + " • "+ current_album)
+        if pil_image is None:
+            pil_image = Image.open(sys.path[0] + "/sonos.png")
+            _LOGGER.warning("Image not available, using default")
 
-            # pull the image from the uri provided
-            image_url = current_image
-
-            image_failed_to_load = False
-            try:
-                image_url_response = requests.get(image_url, timeout=sonos_user_data.DEFAULT_TIMEOUT)
-                pil_image = Image.open(BytesIO(image_url_response.content))
-            except:
-                pil_image = Image.open (sys.path[0] + "/sonos.png")
-                target_image_width = 500
-                print ("Image failed to load so showing standard sonos logo")
-
-            # set the image size based on whether we are showing track details as well
-            if sonos_settings.show_details == True:
-                target_image_width = thumbwidth
-            else:
-                target_image_width = screenwidth
-
-            # resize the image
-            wpercent = (target_image_width/float(pil_image.size[0]))
-            hsize = int((float(pil_image.size[1])*float(wpercent)))
-            pil_image = pil_image.resize((target_image_width,hsize), Image.ANTIALIAS)
-
-            set_backlight_power(True)
-            tk_image = ImageTk.PhotoImage(pil_image)
-            label_albumart.configure (image = tk_image)
-
-    if playing_status == "API error":
-        if remote_debug_key != "": print ("API error reported fyi")
-        time.sleep (5)
-
-    if playing_status != "PLAYING":
-        set_backlight_power(False)
-        track_name.set("")
-        detail_text.set("")
-        label_albumart.configure (image = "")
-        previous_polled_trackname = ""
+        display.update(pil_image, sonos_data)
+    else:
+        display.hide_album()
         if remote_debug_key != "": print ("Track not playing - doing nothing")
 
-    # Schedule the poll() function for another 500 ms from now
-    root.after(500, update)
+def setup_logging():
+    """Set up logging facilities for the script."""
+    log_level = getattr(sonos_settings, "log_level", logging.INFO)
+    log_file = getattr(sonos_settings, "log_file", None)
+    if log_file:
+        log_path = os.path.expanduser(log_file)
+    else:
+        log_path = None
 
-###############################################################################
-# Main script
+    fmt = "%(asctime)s %(levelname)7s - %(message)s"
+    logging.basicConfig(format=fmt, level=log_level)
 
-if sonos_settings.room_name_for_highres == "":
-    print ("No room name found in sonos_settings.py")
-    print ("You can specify a room name manually below")
-    print ("Note: manual entry works for testing purposes, but if you want this to run automatically on startup then you should specify a room name in sonos_settings.py")
-    print ("You can edit the file with the command: nano sonos_settings.py")
-    print ("")
-    sonos_room = input ("Enter a Sonos room name for testing purposes>>>  ")
-else:
-    sonos_room = sonos_settings.room_name_for_highres
-    print ("Sonos room name set as " + sonos_room + " from settings file")
+    # Suppress overly verbose logs from libraries that aren't helpful
+    logging.getLogger("aiohttp.access").setLevel(logging.WARNING)
+    logging.getLogger("PIL.PngImagePlugin").setLevel(logging.WARNING)
 
-@atexit.register
-def goodbye():
-    """Clean up when script is exiting."""
-    set_backlight_power(True)
-    print("Exiting")
+    if log_path is None:
+        return
 
-# Create the main window
-root = tk.Tk()
-root.geometry("720x720")
-root.title("Music Display")
+    log_path_exists = os.path.isfile(log_path)
+    log_dir = os.path.dirname(log_path)
 
-# Create the main container
-frame = tk.Frame(root, bg='black', width=720, height=720)
+    if (log_path_exists and os.access(log_path, os.W_OK)) or (
+        not log_path_exists and os.access(log_dir, os.W_OK)
+    ):
+        _LOGGER.info("Writing to log file: %s", log_path)
+        logfile_handler = logging.FileHandler(log_path, mode="a")
 
-# Lay out the main container (expand to fit window)
-frame.pack(fill=tk.BOTH, expand=1)
+        logfile_handler.setLevel(log_level)
+        logfile_handler.setFormatter(logging.Formatter(fmt))
 
-# Set variables
-track_name = tk.StringVar()
-detail_text = tk.StringVar()
-if sonos_settings.show_artist_and_album:
-    track_font = tkFont.Font(family='Helvetica', size=30)
-else:
-    track_font = tkFont.Font(family='Helvetica', size=40)
-image_font = tkFont.Font(size=25)
-detail_font = tkFont.Font(family='Helvetica', size=15)
+        logger = logging.getLogger("")
+        logger.addHandler(logfile_handler)
+    else:
+        _LOGGER.error("Cannot write to %s, check permissions and ensure directory exists", log_path)
 
-# Create widgets
-label_albumart = tk.Label(frame,
-                        image = None,
-                        font=image_font,
-                        borderwidth=0,
-                        highlightthickness=0,
-                        fg='white',
-                        bg='black')
-label_track = tk.Label(frame,
-                        textvariable=track_name,
-                        font=track_font,
-                        fg='white',
-                        bg='black',
-                        wraplength=600,
-                        justify="center")
-label_detail = tk.Label(frame,
-                        textvariable=detail_text,
-                        font=detail_font,
-                        fg='white',
-                        bg='black',
-                        wraplength=600,
-                        justify="center")
+async def main(loop):
+    """Main process for script."""
+    setup_logging()
+    show_details_timeout = getattr(sonos_settings, "show_details_timeout", None)
+    display = DisplayController(loop, sonos_settings.show_details, sonos_settings.show_artist_and_album, show_details_timeout)
 
+    if sonos_settings.room_name_for_highres == "":
+        print ("No room name found in sonos_settings.py")
+        print ("You can specify a room name manually below")
+        print ("Note: manual entry works for testing purposes, but if you want this to run automatically on startup then you should specify a room name in sonos_settings.py")
+        print ("You can edit the file with the command: nano sonos_settings.py")
+        print ("")
+        sonos_room = input ("Enter a Sonos room name for testing purposes>>>  ")
+    else:
+        sonos_room = sonos_settings.room_name_for_highres
+        _LOGGER.info("Monitoring room: %s", sonos_room)
 
-if sonos_settings.show_details == False:
-    label_albumart.place (relx=0.5, rely=0.5, anchor=tk.CENTER)
+    session = ClientSession()
+    sonos_data = SonosData(
+            sonos_settings.sonos_http_api_address,
+            sonos_settings.sonos_http_api_port,
+            sonos_room,
+            session,
+    )
 
-if sonos_settings.show_details == True:
-    label_albumart.place(x=360, y=thumbsize[1]/2, anchor=tk.CENTER)
-    label_track.place (x=360, y=thumbsize[1]+20, anchor=tk.N)
+    async def webhook_callback():
+        """Callback to trigger after webhook is processed."""
+        await redraw(session, sonos_data, display)
 
-    label_track.update()
-    height_of_track_label = label_track.winfo_reqheight()
+    webhook = SonosWebhook(display, sonos_data, webhook_callback)
+    await webhook.listen()
 
-    if sonos_settings.show_artist_and_album:
-        label_detail.place (x=360, y=710, anchor=tk.S)
+    for signame in ('SIGINT', 'SIGTERM', 'SIGQUIT'):
+        loop.add_signal_handler(getattr(signal, signame), lambda: asyncio.ensure_future(cleanup(loop, session, webhook, display)))
 
-frame.grid_propagate(False)
+    while True:
+        if sonos_data.webhook_active:
+            update_interval = WEBHOOK_INTERVAL
+        else:
+            update_interval = POLLING_INTERVAL
 
-# Schedule the poll() function to be called periodically
-root.after(20, update)
+        if time.time() - sonos_data.last_update > update_interval:
+            await sonos_data.refresh()
+            await redraw(session, sonos_data, display)
+        await asyncio.sleep(1)
 
-# Start in fullscreen mode and run
-root.attributes('-fullscreen', fullscreen)
-try:
-    root.mainloop()
-except KeyboardInterrupt:
-    pass
+async def cleanup(loop, session, webhook, display):
+    """Cleanup tasks on shutdown."""
+    _LOGGER.debug("Shutting down")
+    display.cleanup()
+    await session.close()
+    await webhook.stop()
+
+    tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
+    [task.cancel() for task in tasks]
+    await asyncio.gather(*tasks, return_exceptions=True)
+    loop.stop()
+
+if __name__ == '__main__':
+    loop = asyncio.get_event_loop()
+    try:
+        loop.create_task(main(loop))
+        loop.run_forever()
+    finally:
+        loop.close()
