@@ -86,7 +86,7 @@ async def redraw(session, sonos_data, display):
             return
 
         # slim down the trackname
-        if sonos_settings.demaster:
+        if sonos_settings.demaster and self.type not in ["line_in", "TV"]:
             offline = not getattr(sonos_settings, "demaster_query_cloud", False)
             sonos_data.trackname = demaster.strip_name(sonos_data.trackname, offline)
             if remote_debug_key != "": print ("Demastered to " + sonos_data.trackname)
@@ -95,6 +95,10 @@ async def redraw(session, sonos_data, display):
         image_data = await get_image_data(session, sonos_data.image_uri)
         if image_data:
             pil_image = Image.open(BytesIO(image_data))
+        elif sonos_data.type == "line_in":
+            pil_image = Image.open(sys.path[0] + "/line_in.png")
+        elif sonos_data.type == "TV":
+            pil_image = Image.open(sys.path[0] + "/tv.png")
 
         if pil_image is None:
             pil_image = Image.open(sys.path[0] + "/sonos.png")

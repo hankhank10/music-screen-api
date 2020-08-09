@@ -75,6 +75,41 @@ class SonosData():
         self._track_is_new = False
         return is_new
 
+    def set_track_info(self, payload):
+        """Update attributes from the JSON payload. Returns new track_id or None."""
+        self.raw_trackname = payload['currentTrack'].get('title', "")
+        self.artist = payload['currentTrack'].get('artist', "")
+        self.album = payload['currentTrack'].get('album', "")
+        self.station = payload['currentTrack'].get('stationName', "")
+        self.duration = payload['currentTrack']['duration']
+
+        # Abort update if all data is empty
+        if not any([self.album, self.artist, self.duration, self.station, self.raw_trackname]):
+            _LOGGER.debug("No data returned by the API, skipping update")
+            return None
+
+        if self.type == "radio" and not self.station:
+            # if not then try to look it up (usually because its played from Alexa)
+            self.station = find_unknown_radio_station_name(self.raw_trackname)
+
+        # Clear uninteresting tracknames
+        if self.raw_trackname.startswith("x-sonosapi-") or self.raw_trackname.endswith(".m3u8"):
+            self.trackname = ""
+        else:
+            self.trackname = self.raw_trackname
+
+        track_id = self.artist
+        if self.trackname:
+            track_id += f" - {self.trackname}"
+        if self.album:
+            track_id += f" ({self.album})"
+        if self.duration:
+            track_id += f" - {timedelta(seconds=self.duration)}"
+        if self.station:
+            track_id += f" [{self.station}]"
+
+        return track_id
+
     async def refresh(self, payload=None):
         """Refresh the Sonos media data with provided payload or a new get request."""
         if payload:
@@ -107,46 +142,28 @@ class SonosData():
             return
 
         self.type = obj['currentTrack']['type']
-        self.raw_trackname = obj['currentTrack'].get('title', "")
-        self.artist = obj['currentTrack'].get('artist', "")
-        self.album = obj['currentTrack'].get('album', "")
-        self.station = obj['currentTrack'].get('stationName', "")
-        self.duration = obj['currentTrack']['duration']
 
-        # Abort update if all data is empty
-        if not any([self.album, self.artist, self.duration, self.station, self.raw_trackname]):
-            _LOGGER.debug("No data returned by the API, skipping update")
-            return
-
-        if self.type == "radio" and not self.station:
-            # if not then try to look it up (usually because its played from Alexa)
-            self.station = find_unknown_radio_station_name(self.raw_trackname)
-
-        # Clear uninteresting tracknames
-        if self.raw_trackname.startswith("x-sonosapi-") or self.raw_trackname.endswith(".m3u8"):
-            self.trackname = ""
+        if self.type == "line_in":
+            uri = obj['currentTrack']['uri']
+            if uri.startswith('x-sonos-htastream:'):
+                self.type = track_id = "TV"
+            else:
+                track_id = "Line-In"
+            self.image_uri = None
         else:
-            self.trackname = self.raw_trackname
+            track_id = self.set_track_info(obj)
 
-        # Artist seems to always be provided, but other fields vary
-        track_id = self.artist
-        if self.trackname:
-            track_id += f" - {self.trackname}"
-        if self.album:
-            track_id += f" ({self.album})"
-        if self.duration:
-            track_id += f" - {timedelta(seconds=self.duration)}"
-        if self.station:
-            track_id += f" [{self.station}]"
+            if not track_id:
+                return
 
-        album_art_uri = obj['currentTrack'].get('albumArtUri', "")
-        speaker_uri = self.get_speaker_uri(obj)
-        if album_art_uri.startswith('http'):
-            self.image_uri = album_art_uri
-        elif speaker_uri and album_art_uri:
-            self.image_uri = f"{speaker_uri}{album_art_uri}"
-        else:
-            self.image_uri = obj['currentTrack'].get('absoluteAlbumArtUri', "")
+            album_art_uri = obj['currentTrack'].get('albumArtUri', "")
+            speaker_uri = self.get_speaker_uri(obj)
+            if album_art_uri.startswith('http'):
+                self.image_uri = album_art_uri
+            elif speaker_uri and album_art_uri:
+                self.image_uri = f"{speaker_uri}{album_art_uri}"
+            else:
+                self.image_uri = obj['currentTrack'].get('absoluteAlbumArtUri', "")
 
         if track_id != self.previous_track:
             _LOGGER.info("New track: %s", track_id)
