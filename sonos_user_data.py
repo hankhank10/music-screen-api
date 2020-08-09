@@ -81,7 +81,6 @@ class SonosData():
         self.artist = payload['currentTrack'].get('artist', "")
         self.album = payload['currentTrack'].get('album', "")
         self.station = payload['currentTrack'].get('stationName', "")
-        self.duration = payload['currentTrack']['duration']
 
         # Abort update if all data is empty
         if not any([self.album, self.artist, self.duration, self.station, self.raw_trackname]):
@@ -142,6 +141,7 @@ class SonosData():
             return
 
         self.type = obj['currentTrack']['type']
+        self.duration = obj['currentTrack']['duration']
 
         if self.type == "line_in":
             uri = obj['currentTrack']['uri']
@@ -150,6 +150,10 @@ class SonosData():
             else:
                 track_id = "Line-In"
             self.image_uri = None
+            self.trackname = track_id
+            self.artist = ""
+            self.album = ""
+            self.station = ""
         else:
             track_id = self.set_track_info(obj)
 

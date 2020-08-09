@@ -86,7 +86,7 @@ async def redraw(session, sonos_data, display):
             return
 
         # slim down the trackname
-        if sonos_settings.demaster and self.type not in ["line_in", "TV"]:
+        if sonos_settings.demaster and sonos_data.type not in ["line_in", "TV"]:
             offline = not getattr(sonos_settings, "demaster_query_cloud", False)
             sonos_data.trackname = demaster.strip_name(sonos_data.trackname, offline)
             if remote_debug_key != "": print ("Demastered to " + sonos_data.trackname)
