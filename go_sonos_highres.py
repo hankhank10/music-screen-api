@@ -6,6 +6,7 @@ import asyncio
 import logging
 import os
 import signal
+import subprocess
 import sys
 import time
 from io import BytesIO
@@ -109,6 +110,15 @@ async def redraw(session, sonos_data, display):
         display.hide_album()
         if remote_debug_key != "": print ("Track not playing - doing nothing")
 
+def log_git_hash():
+    """Log the current git hash for troubleshooting purposes."""
+    try:
+        git_hash = subprocess.check_output(["git", "describe"], text=True).strip()
+    except OSError as err:
+        _LOGGER.debug("Error getting current version: %s", err)
+    else:
+        _LOGGER.info("Current script version: %s", git_hash)
+
 def setup_logging():
     """Set up logging facilities for the script."""
     log_level = getattr(sonos_settings, "log_level", logging.INFO)
@@ -148,6 +158,7 @@ def setup_logging():
 async def main(loop):
     """Main process for script."""
     setup_logging()
+    log_git_hash()
     show_details_timeout = getattr(sonos_settings, "show_details_timeout", None)
     display = DisplayController(loop, sonos_settings.show_details, sonos_settings.show_artist_and_album, show_details_timeout)
 
