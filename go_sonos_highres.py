@@ -126,8 +126,8 @@ async def redraw(session, sonos_data, display):
 def log_git_hash():
     """Log the current git hash for troubleshooting purposes."""
     try:
-        git_hash = subprocess.check_output(["git", "describe"], text=True).strip()
-    except OSError as err:
+        git_hash = subprocess.check_output(["git", "describe"], cwd=sys.path[0], text=True).strip()
+    except (OSError, subprocess.CalledProcessError) as err:
         _LOGGER.debug("Error getting current version: %s", err)
     else:
         _LOGGER.info("Current script version: %s", git_hash)
