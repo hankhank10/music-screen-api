@@ -29,6 +29,8 @@ I have put together step-by-step basic instructions:
 - [e-INK version here](https://www.hackster.io/mark-hank/currently-playing-music-on-e-ink-display-310645)
 - [High res version here](https://www.hackster.io/mark-hank/sonos-album-art-on-raspberry-pi-screen-5b0012)
 
+Note that before running go_sonos_highres.py you need to create your own copy of sonos_settings.py: there is an example file in this repo as sonos_settings.py.example
+
 # Key dependencies to load if you know what you're doing and don't want to follow all the steps above
 
 ````

@@ -1,3 +1,8 @@
 __pycache__
 .DS_Store
 sonos_settings.py
+.idea/inspectionProfiles/profiles_settings.xml
+.idea/misc.xml
+.idea/modules.xml
+.idea/music-screen-api.iml
+.idea/vcs.xml
