@@ -76,6 +76,19 @@ async def redraw(session, sonos_data, display):
 
     pil_image = None
 
+    def should_sleep():
+        """Determine if screen should be sleeping."""
+        if sonos_data.type == "line_in":
+            return getattr(sonos_settings, "sleep_on_linein", False)
+        if sonos_data.type == "TV":
+            return getattr(sonos_settings, "sleep_on_tv", False)
+
+    if should_sleep():
+        if display.is_showing:
+            _LOGGER.debug("Input source is %s, sleeping", sonos_data.type)
+            display.hide_album()
+        return
+
     # see if something is playing
     if sonos_data.status == "PLAYING":
         if remote_debug_key != "": print ("Music playing")
