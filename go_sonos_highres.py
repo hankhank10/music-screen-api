@@ -15,7 +15,6 @@ from aiohttp import ClientError, ClientSession
 from PIL import Image, ImageFile
 
 import demaster
-import scrap
 from display_controller import DisplayController
 from sonos_user_data import SonosData
 from webhook_handler import SonosWebhook
@@ -27,18 +26,6 @@ try:
 except ImportError:
     _LOGGER.error("ERROR: Config file not found. Copy 'sonos_settings.py.example' to 'sonos_settings.py' before you edit. You can do this with the command: cp sonos_settings.py.example sonos_settings.py")
     sys.exit(1)
-
-
-## Remote debug mode - only activate if you are experiencing issues and want the developer to help
-remote_debug_key = ""
-if remote_debug_key != "":
-    print ("Remote debugging being set up - waiting 10 seconds for wifi to get working")
-    time.sleep(10)
-    scrap.setup (remote_debug_key)
-    scrap.auto_scrap_on_print()
-    scrap.auto_scrap_on_error()
-    scrap.new_section()
-    scrap.write ("App start")
 
 ###############################################################################
 # Global variables and setup
@@ -71,7 +58,6 @@ async def get_image_data(session, url):
 async def redraw(session, sonos_data, display):
     """Redraw the screen with current data."""
     if sonos_data.status == "API error":
-        if remote_debug_key != "": print ("API error reported fyi")
         return
 
     pil_image = None
@@ -91,8 +77,6 @@ async def redraw(session, sonos_data, display):
 
     # see if something is playing
     if sonos_data.status == "PLAYING":
-        if remote_debug_key != "": print ("Music playing")
-
         if not sonos_data.is_track_new():
             # Ensure the album frame is displayed in case the current track was paused, seeked, etc
             if not display.is_showing:
@@ -103,7 +87,6 @@ async def redraw(session, sonos_data, display):
         if sonos_settings.demaster and sonos_data.type not in ["line_in", "TV"]:
             offline = not getattr(sonos_settings, "demaster_query_cloud", False)
             sonos_data.trackname = demaster.strip_name(sonos_data.trackname, offline)
-            if remote_debug_key != "": print ("Demastered to " + sonos_data.trackname)
             _LOGGER.debug("Demastered to %s", sonos_data.trackname)
 
         image_data = await get_image_data(session, sonos_data.image_uri)
@@ -121,7 +104,6 @@ async def redraw(session, sonos_data, display):
         display.update(pil_image, sonos_data)
     else:
         display.hide_album()
-        if remote_debug_key != "": print ("Track not playing - doing nothing")
 
 def log_git_hash():
     """Log the current git hash for troubleshooting purposes."""
