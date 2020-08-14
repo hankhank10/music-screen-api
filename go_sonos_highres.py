@@ -14,7 +14,7 @@ from io import BytesIO
 from aiohttp import ClientError, ClientSession
 from PIL import Image, ImageFile
 
-import demaster
+import async_demaster
 from display_controller import DisplayController
 from sonos_user_data import SonosData
 from webhook_handler import SonosWebhook
@@ -86,8 +86,7 @@ async def redraw(session, sonos_data, display):
         # slim down the trackname
         if sonos_settings.demaster and sonos_data.type not in ["line_in", "TV"]:
             offline = not getattr(sonos_settings, "demaster_query_cloud", False)
-            sonos_data.trackname = demaster.strip_name(sonos_data.trackname, offline)
-            _LOGGER.debug("Demastered to %s", sonos_data.trackname)
+            sonos_data.trackname = await async_demaster.strip_name(sonos_data.trackname, session, offline)
 
         image_data = await get_image_data(session, sonos_data.image_uri)
         if image_data:
