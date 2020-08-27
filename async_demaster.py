@@ -11,7 +11,7 @@ import aiohttp
 
 API_URL = "http://demaster.hankapi.com/demaster"
 OFFLINE_PATTERN = re.compile(
-    r"(\s(\(|-\s+))((199\d|20[0-2]\d)\s+)?(Remast|Live|Mono|From|Featur).*", re.IGNORECASE
+    r"(\s(\(|-\s+))((199\d|20[0-2]\d)\s+)?(Remast|Live|Mono|From|Feat).*", re.IGNORECASE
 )
 
 _LOGGER = logging.getLogger(__name__)
