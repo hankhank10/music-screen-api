@@ -111,9 +111,6 @@ class SonosData():
 #                self.album = self.station
 ## v1nc3lx       
 
-#       """Update attributes from the JSON payload. Returns new track_id or None."""
-#       self.raw_trackname = payload['currentTrack'].get('title', "")
-
         # Abort update if all data is empty
         if not any([self.album, self.artist, self.duration, self.station, self.raw_trackname]):
             _LOGGER.debug("No data returned by the API, skipping update")
