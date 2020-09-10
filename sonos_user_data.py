@@ -90,6 +90,7 @@ class SonosData():
         if self.artist == self.station and self.type == "radio" :
            if self.raw_trackname.count("~") : c = "~"
            elif self.raw_trackname.count("˗") : c = "˗"
+           elif self.raw_trackname.count("*") : c = "*"
            elif self.raw_trackname.count("|") : c = "|"
            elif self.raw_trackname.count(" - ") : c = " - "
            elif self.raw_trackname.count(" / ") : c = " / "
