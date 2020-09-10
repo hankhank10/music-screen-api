@@ -89,16 +89,12 @@ class SonosData():
 
         if self.artist == self.station and self.type == "radio" :
            if self.raw_trackname.count("~") : c = "~"
-           else :
-              if self.raw_trackname.count("|") : c = "|"
-              else :
-                 if self.raw_trackname.count(" - ") : c = " - "
-                 else :
-                    if self.raw_trackname.count("˗") : c = "˗"
-                    else :
-                       if self.raw_trackname.count(" / ") : c = " / "
-                       else :
-                          c = ""
+           elif self.raw_trackname.count("˗") : c = "˗"
+           elif self.raw_trackname.count("|") : c = "|"
+           elif self.raw_trackname.count(" - ") : c = " - "
+           elif self.raw_trackname.count(" / ") : c = " / "
+           else : c = ""
+
            if c :
               oldstr=self.raw_trackname.casefold()
               splitstr = oldstr.split(c)
@@ -108,7 +104,7 @@ class SonosData():
                  self.album = ' '.join(word[0].upper() + word[1:] for word in splitstr[2].split())
               else :
                  self.album = ""
-#                self.album = self.station
+#                 self.album = self.station
 ## v1nc3lx       
 
         # Abort update if all data is empty
