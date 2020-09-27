@@ -6,6 +6,7 @@ import logging
 import re
 import time
 from urllib.parse import urljoin
+import sonos_settings
 
 from aiohttp import ClientConnectorError
 
@@ -76,11 +77,36 @@ class SonosData():
         return is_new
 
     def set_track_info(self, payload):
+
         """Update attributes from the JSON payload. Returns new track_id or None."""
         self.raw_trackname = payload['currentTrack'].get('title', "")
         self.artist = payload['currentTrack'].get('artist', "")
         self.album = payload['currentTrack'].get('album', "")
         self.station = payload['currentTrack'].get('stationName', "")
+
+        if sonos_settings.artist_and_album_newlook :
+           if self.raw_trackname.startswith("x-sonosapi-") :
+              self.raw_trackname = self.station
+
+           if self.artist == self.station and self.type == "radio" :
+              if self.raw_trackname.count("~") : c = "~"
+              elif self.raw_trackname.count("˗") : c = "˗"
+              elif self.raw_trackname.count("*") : c = "*"
+              elif self.raw_trackname.count("|") : c = "|"
+              elif self.raw_trackname.count(" - ") : c = " - "
+              elif self.raw_trackname.count(" / ") : c = " / "
+              else : c = ""
+
+              if c :
+                 oldstr=self.raw_trackname.casefold()
+                 splitstr = oldstr.split(c)
+                 self.artist = ' '.join(word[0].upper() + word[1:] for word in splitstr[0].split())
+                 self.raw_trackname = ' '.join(word[0].upper() + word[1:] for word in splitstr[1].split())
+                 if c == "~" :
+                    self.album = ' '.join(word[0].upper() + word[1:] for word in splitstr[2].split())
+                 else :
+                    self.album = ""
+#                    self.album = self.station
 
         # Abort update if all data is empty
         if not any([self.album, self.artist, self.duration, self.station, self.raw_trackname]):
@@ -96,6 +122,7 @@ class SonosData():
             self.trackname = ""
         else:
             self.trackname = self.raw_trackname
+
 
         track_id = self.artist
         if self.trackname:
