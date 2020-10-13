@@ -33,12 +33,17 @@ show_details_timeout = 10
 # Also display artist and album with track name. Ignored if 'show_details' is False.
 show_artist_and_album = True
 
+# Display artist and album with track name with a new look. Ignored if 'show_details' is False.
+artist_and_album_newlook = True
+
 # Turn off display (and backlight) when Sonos is playing from a TV source
 sleep_on_tv = False
 
 # Turn off display (and backlight) when Sonos is playing from a Line-In source
 sleep_on_linein = False
 
+# Show clock
+show_clock = True
 
 ## e-ink only settings
 

@@ -14,23 +14,26 @@ SCREEN_H = 720
 THUMB_W = 600
 THUMB_H = 600
 
-
 class DisplayController:  # pylint: disable=too-many-instance-attributes
     """Controller to handle the display hardware and GUI interface."""
 
-    def __init__(self, loop, show_details, show_artist_and_album, show_details_timeout):
+    def __init__(self, loop, show_details, show_artist_and_album, show_details_timeout, show_clock):
         """Initialize the display controller."""
+
+        global showclock
+
         self.loop = loop
         self.show_details = show_details
         self.show_artist_and_album = show_artist_and_album
         self.show_details_timeout = show_details_timeout
+        showclock = show_clock
 
         self.album_image = None
         self.thumb_image = None
         self.timeout_future = None
         self.is_showing = False
 
-        self.backlight = Backlight()
+        if showclock == False : self.backlight = Backlight()
 
         self.root = tk.Tk()
         self.root.geometry(f"{SCREEN_W}x{SCREEN_H}")
@@ -107,6 +110,8 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
 
     def show_album(self, show_details=None, detail_timeout=None):
         """Show album with optional detail display and timeout."""
+        global showclock
+
         def handle_timeout():
             self.timeout_future = None
             self.show_album(show_details=False)
@@ -124,17 +129,21 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
 
         self.is_showing = True
         self.root.update()
-        self.backlight.set_power(True)
+        if showclock == False : self.backlight.set_power(True)
 
     def hide_album(self):
         """Hide album if showing."""
+        global showclock
+
         if self.timeout_future:
             self.timeout_future.cancel()
             self.timeout_future = None
             self.show_album(show_details=False)
 
         self.is_showing = False
-        self.backlight.set_power(False)
+
+        if showclock == False : self.backlight.set_power(False)
+
         self.curtain_frame.lift()
         self.root.update()
 
@@ -177,4 +186,6 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
 
     def cleanup(self):
         """Run cleanup actions."""
-        self.backlight.cleanup()
+        global showclock
+
+        if showclock == False : self.backlight.cleanup()

@@ -11,6 +11,8 @@ import sys
 import time
 from io import BytesIO
 
+from subprocess import Popen, PIPE
+
 from aiohttp import ClientError, ClientSession
 from PIL import Image, ImageFile
 
@@ -92,12 +94,12 @@ async def redraw(session, sonos_data, display):
         if image_data:
             pil_image = Image.open(BytesIO(image_data))
         elif sonos_data.type == "line_in":
-            pil_image = Image.open(sys.path[0] + "/line_in.png")
+            pil_image = Image.open(sys.path[0] + "/images/line_in.png")
         elif sonos_data.type == "TV":
-            pil_image = Image.open(sys.path[0] + "/tv.png")
+            pil_image = Image.open(sys.path[0] + "/images/tv.png")
 
         if pil_image is None:
-            pil_image = Image.open(sys.path[0] + "/sonos.png")
+            pil_image = Image.open(sys.path[0] + "/images/sonos.png")
             _LOGGER.warning("Image not available, using default")
 
         display.update(pil_image, sonos_data)
@@ -112,6 +114,12 @@ def log_git_hash():
         _LOGGER.debug("Error getting current version: %s", err)
     else:
         _LOGGER.info("Current script version: %s", git_hash)
+
+def run_clock(i):
+    if i :
+        clockapp = sys.path[0] + "/clock.py"
+        Popen(['python3', clockapp], stdout=PIPE, stderr=PIPE)
+    return False
 
 def setup_logging():
     """Set up logging facilities for the script."""
@@ -151,10 +159,14 @@ def setup_logging():
 
 async def main(loop):
     """Main process for script."""
+    global firsttime
+    firsttime = True
+
     setup_logging()
     log_git_hash()
     show_details_timeout = getattr(sonos_settings, "show_details_timeout", None)
-    display = DisplayController(loop, sonos_settings.show_details, sonos_settings.show_artist_and_album, show_details_timeout)
+    show_clock = getattr(sonos_settings, "show_clock", None)
+    display = DisplayController(loop, sonos_settings.show_details, sonos_settings.show_artist_and_album, show_details_timeout,show_clock)
 
     if sonos_settings.room_name_for_highres == "":
         print ("No room name found in sonos_settings.py")
@@ -184,6 +196,9 @@ async def main(loop):
 
     for signame in ('SIGINT', 'SIGTERM', 'SIGQUIT'):
         loop.add_signal_handler(getattr(signal, signame), lambda: asyncio.ensure_future(cleanup(loop, session, webhook, display)))
+
+    if sonos_settings.show_clock and firsttime:
+       firsttime = run_clock(firsttime)
 
     while True:
         if sonos_data.webhook_active:
