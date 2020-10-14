@@ -108,9 +108,18 @@ def tick():
           if (now.day == 3 or now.day == 23):
               sup = 'rd'
           if Date_Locale != "":
-              sup = ""
-          ds = "{0:%A %B} {0.day}<sup>{1}</sup> {0.year}".format(now, sup)
-          datex.setText(ds)
+              if Date_Locale.startswith("en_GB") :
+                  ds = "{0:%A} {0.day}<sup>{1}</sup> {0:%B} {0.year}".format(now,sup)
+                  datex.setText(ds)
+              elif Date_Locale.startswith("en_US") :
+                  ds = "{0:%A %B} {0.day}<sup>{1}</sup> {0.year}".format(now,sup)
+                  datex.setText(ds)
+              else: 
+                  ds = "{0:%A} {0.day} {0:%B} {0.year}".format(now)
+                  datex.setText(ds.title())
+          else: 
+              ds = "{0:%A %B} {0.day}<sup>{1}</sup> {0.year}".format(now, sup)
+              datex.setText(ds)
 
 def qtstart():
     global ctimer
@@ -144,15 +153,15 @@ text_color = '#bef'
 # example: font_attr = 'font-weight: bold; '
 #font_attr = 'font: 24pt'
 
-# The Python Locale for date/time (locale.setlocale)
 #  '' for default Pi Setting
 # Locales must be installed in your Pi.. to check what is installed
 # locale -a
 # to install locales
 # sudo dpkg-reconfigure locales
-Date_Locale = ''
+# Date_Locale = ''
+Date_Locale = clock_settings.date_locale
 
-CLOCK_OFF, CLOCK_ON = 0, 1
+OFF, ON = 0, 1
 
 #display_date = 0
 
@@ -272,7 +281,7 @@ def check_msa_status() :
     global mytimer, bl, secstogo, secstogo_loc,msa_url
 
     def turn_clock (w,onoff) :
-        if onoff == CLOCK_ON :
+        if onoff == ON :
             w.show()
             w.showFullScreen()
         else :
@@ -297,15 +306,15 @@ def check_msa_status() :
     if playing_status in [ "STOPPED","PAUSED_PLAYBACK" ] :
         if secstogo_loc :
             if bl.power == False : bl.set_power(True)
-            turn_clock (w,CLOCK_ON)
+            turn_clock (w,ON)
             _LOGGER.debug("CLOCK_ON -> STATUS: %s <-> SECSTOGO: %s", playing_status,secstogo)
         else:
             if bl.power == True : bl.set_power(False)
-            turn_clock (w,CLOCK_OFF)
+            turn_clock (w,OFF)
             _LOGGER.debug("CLOCK_OFF -> STATUS: %s <-> SECSTOGO: %s", playing_status,secstogo)
     elif playing_status == "PLAYING" :
         if bl.power == False : bl.set_power(True)
-        turn_clock (w,CLOCK_OFF)
+        turn_clock (w,OFF)
         secstogo_loc = secstogo
         _LOGGER.debug("CLOCK_OFF -> STATUS: %s <-> SECSTOGO: %s", playing_status,secstogo)
 
