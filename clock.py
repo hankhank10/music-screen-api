@@ -214,10 +214,14 @@ def clock_prep():
 
     clockface = QtGui.QFrame(foreGround)
     clockface.setObjectName("clockface")
+    if clock_settings.display_date :
+        dspmnt = 16
+    else:
+        dspmnt = 36
     clockrect = QtCore.QRect(
         width / 2 - height * .4,
 #       height * .45 - height * .4,
-        height * .45 - height * .4 + 36,
+        height * .45 - height * .4 + dspmnt,
         height * .8,
         height * .8)
     clockface.setGeometry(clockrect)
@@ -283,6 +287,7 @@ def check_msa_status() :
     try:
         r = requests.get(msa_url)
     except requests.exceptions.RequestException as e:
+        _LOGGER.debug("MSA_URL: %s -> %s", msa_url,e)
         raise SystemExit(e)
 
     o=json.loads(r.text)
@@ -292,17 +297,17 @@ def check_msa_status() :
     if playing_status in [ "STOPPED","PAUSED_PLAYBACK" ] :
         if secstogo_loc :
             if bl.power == False : bl.set_power(True)
-            _LOGGER.debug("CLOCK_ON -> PLAYING STATUS: %s", playing_status)
             turn_clock (w,CLOCK_ON)
+            _LOGGER.debug("CLOCK_ON -> STATUS: %s <-> SECSTOGO: %s", playing_status,secstogo)
         else:
             if bl.power == True : bl.set_power(False)
-            _LOGGER.debug("CLOCK_OFF -> PLAYING STATUS: %s",playing_status)
             turn_clock (w,CLOCK_OFF)
+            _LOGGER.debug("CLOCK_OFF -> STATUS: %s <-> SECSTOGO: %s", playing_status,secstogo)
     elif playing_status == "PLAYING" :
         if bl.power == False : bl.set_power(True)
-        _LOGGER.debug("CLOCK_OFF -> PLAYING STATUS: %s",playing_status)
         turn_clock (w,CLOCK_OFF)
         secstogo_loc = secstogo
+        _LOGGER.debug("CLOCK_OFF -> STATUS: %s <-> SECSTOGO: %s", playing_status,secstogo)
 
     mytimer = QtCore.QTimer()
     mytimer.timeout.connect(check_msa_status)
@@ -322,7 +327,7 @@ def setup_logging():
     logging.basicConfig(format=fmt, level=log_level)
 
     # Suppress overly verbose logs from libraries that aren't helpful
-#    logging.getLogger("aiohttp.access").setLevel(logging.WARNING)
+    logging.getLogger("aiohttp.access").setLevel(logging.WARNING)
 #    logging.getLogger("PIL.PngImagePlugin").setLevel(logging.WARNING)
 
     if log_path is None:
@@ -353,8 +358,7 @@ def main() :
 
     setup_logging()
 
-    _LOGGER.debug("msa_url: %s", msa_url)
-    _LOGGER.debug("clock_timeout: %s", clock_settings.clock_timeout)
+    _LOGGER.debug("msa_url: %s <-> clock_timeout: %s", msa_url,clock_settings.clock_timeout)
 
     secstogo = clock_settings.clock_timeout
     secstogo_loc = secstogo
