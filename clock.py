@@ -224,7 +224,7 @@ def clock_prep():
     clockface = QtGui.QFrame(foreGround)
     clockface.setObjectName("clockface")
     if clock_settings.display_date :
-        dspmnt = 16
+        dspmnt = 14
     else:
         dspmnt = 36
     clockrect = QtCore.QRect(
