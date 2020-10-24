@@ -1,7 +1,9 @@
 """Implementation of the DisplayController class."""
 import logging
+import os
 import tkinter as tk
 from tkinter import font as tkFont
+import sys
 
 from PIL import ImageTk
 
@@ -32,7 +34,19 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
 
         self.backlight = Backlight()
 
-        self.root = tk.Tk()
+        try:
+            self.root = tk.Tk()
+        except tk.TclError:
+            self.root = None
+
+        if not self.root:
+            os.environ["DISPLAY"] = ":0"
+            try:
+                self.root = tk.Tk()
+            except tk.TclError as error:
+                _LOGGER.error("Cannot access display: %s", error)
+                sys.exit(1)
+
         self.root.geometry(f"{SCREEN_W}x{SCREEN_H}")
 
         self.album_frame = tk.Frame(
