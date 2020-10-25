@@ -3,7 +3,6 @@ import logging
 import os
 import tkinter as tk
 from tkinter import font as tkFont
-import sys
 
 from PIL import ImageTk
 
@@ -15,6 +14,10 @@ SCREEN_W = 720
 SCREEN_H = 720
 THUMB_W = 600
 THUMB_H = 600
+
+
+class SonosDisplaySetupError(Exception):
+    """Error connecting to Sonos display."""
 
 
 class DisplayController:  # pylint: disable=too-many-instance-attributes
@@ -45,7 +48,7 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
                 self.root = tk.Tk()
             except tk.TclError as error:
                 _LOGGER.error("Cannot access display: %s", error)
-                sys.exit(1)
+                raise SonosDisplaySetupError
 
         self.root.geometry(f"{SCREEN_W}x{SCREEN_H}")
 
