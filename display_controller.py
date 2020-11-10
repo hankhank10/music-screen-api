@@ -1,5 +1,6 @@
 """Implementation of the DisplayController class."""
 import logging
+import os
 import tkinter as tk
 from tkinter import font as tkFont
 
@@ -13,6 +14,10 @@ SCREEN_W = 720
 SCREEN_H = 720
 THUMB_W = 600
 THUMB_H = 600
+
+
+class SonosDisplaySetupError(Exception):
+    """Error connecting to Sonos display."""
 
 
 class DisplayController:  # pylint: disable=too-many-instance-attributes
@@ -32,7 +37,19 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
 
         self.backlight = Backlight()
 
-        self.root = tk.Tk()
+        try:
+            self.root = tk.Tk()
+        except tk.TclError:
+            self.root = None
+
+        if not self.root:
+            os.environ["DISPLAY"] = ":0"
+            try:
+                self.root = tk.Tk()
+            except tk.TclError as error:
+                _LOGGER.error("Cannot access display: %s", error)
+                raise SonosDisplaySetupError
+
         self.root.geometry(f"{SCREEN_W}x{SCREEN_H}")
 
         self.album_frame = tk.Frame(
