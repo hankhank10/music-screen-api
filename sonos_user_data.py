@@ -100,13 +100,26 @@ class SonosData():
               if c :
                  oldstr=self.raw_trackname.casefold()
                  splitstr = oldstr.split(c)
-                 self.artist = ' '.join(word[0].upper() + word[1:] for word in splitstr[0].split())
-                 self.raw_trackname = ' '.join(word[0].upper() + word[1:] for word in splitstr[1].split())
-                 if c == "~" :
-                    self.album = ' '.join(word[0].upper() + word[1:] for word in splitstr[2].split())
+                 if self.raw_trackname.startswith("BR P|TYPE=SNG|") :
+                    if self.raw_trackname == "BR P|TYPE=SNG|TITLE |ARTIST |ALBUM" :
+                        self.artist = self.station
+                        self.raw_trackname = ""
+                    else : 
+                        self.artist = ' '.join(word[0].upper() + word[1:] for word in splitstr[3].split())[6:]
+                        self.raw_trackname = ' '.join(word[0].upper() + word[1:] for word in splitstr[2].split())[5:]
+                    if c == "~" :
+                        self.album = ' '.join(word[0].upper() + word[1:] for word in splitstr[2].split())
+                    else :
+                        self.album = ""
+    #                    self.album = self.station
                  else :
-                    self.album = ""
-#                    self.album = self.station
+                    self.artist = ' '.join(word[0].upper() + word[1:] for word in splitstr[0].split())
+                    self.raw_trackname = ' '.join(word[0].upper() + word[1:] for word in splitstr[1].split())
+                    if c == "~" :
+                        self.album = ' '.join(word[0].upper() + word[1:] for word in splitstr[2].split())
+                    else :
+                        self.album = ""
+    #                    self.album = self.station
 
         # Abort update if all data is empty
         if not any([self.album, self.artist, self.duration, self.station, self.raw_trackname]):
