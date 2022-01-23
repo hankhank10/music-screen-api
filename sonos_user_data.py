@@ -83,6 +83,7 @@ class SonosData():
         self.artist = payload['currentTrack'].get('artist', "")
         self.album = payload['currentTrack'].get('album', "")
         self.station = payload['currentTrack'].get('stationName', "")
+        self.uri = payload['currentTrack'].get('uri', "")
 
         if sonos_settings.artist_and_album_newlook :
            if self.raw_trackname.startswith("x-sonosapi-") :
@@ -102,8 +103,11 @@ class SonosData():
                  splitstr = oldstr.split(c)
                  if self.raw_trackname.startswith("BR P|TYPE=SNG|") :
                     if self.raw_trackname == "BR P|TYPE=SNG|TITLE |ARTIST |ALBUM" :
-                        self.artist = self.station
-                        self.raw_trackname = ""
+                        if "bbc_radio" in self.uri :
+                            self.raw_trackname = "BBC " + self.station
+                        else :
+                            self.raw_trackname = self.station
+                        self.artist = ""
                     else : 
                         self.artist = ' '.join(word[0].upper() + word[1:] for word in splitstr[3].split())[6:]
                         self.raw_trackname = ' '.join(word[0].upper() + word[1:] for word in splitstr[2].split())[5:]
