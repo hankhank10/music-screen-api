@@ -101,6 +101,7 @@ class SonosData():
               if c :
                  oldstr=self.raw_trackname.casefold()
                  splitstr = oldstr.split(c)
+                 SplitStr = self.raw_trackname.split(c)
                  if self.raw_trackname.startswith("BR P|TYPE=SNG|") :
                     if self.raw_trackname == "BR P|TYPE=SNG|TITLE |ARTIST |ALBUM" :
                         if "bbc_radio" in self.uri :
@@ -109,8 +110,10 @@ class SonosData():
                             self.raw_trackname = self.station
                         self.artist = ""
                     else : 
-                        self.artist = ' '.join(word[0].upper() + word[1:] for word in splitstr[3].split())[6:]
-                        self.raw_trackname = ' '.join(word[0].upper() + word[1:] for word in splitstr[2].split())[5:]
+                        #self.artist = ' '.join(word[0].upper() + word[1:] for word in splitstr[3].split())[6:]
+                        self.artist = SplitStr[3][6:]
+                        #self.raw_trackname = ' '.join(word[0].upper() + word[1:] for word in splitstr[2].split())[5:]
+                        self.raw_trackname = SplitStr[2][5:]
                     if c == "~" :
                         self.album = ' '.join(word[0].upper() + word[1:] for word in splitstr[2].split())
                     else :
