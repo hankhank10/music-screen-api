@@ -177,8 +177,6 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
                 self.track_font = tkFont.Font(family="Helvetica", size=25)
                 self.THUMB_H = 580
                 self.THUMB_W = 580
-                print(display_trackname)
-
             else:
                 self.track_font = tkFont.Font(family="Helvetica", size=30)
                 self.THUMB_H = 600
