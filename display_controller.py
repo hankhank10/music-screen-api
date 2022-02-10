@@ -10,10 +10,7 @@ from hyperpixel_backlight import Backlight
 
 _LOGGER = logging.getLogger(__name__)
 
-SCREEN_W = 720
-SCREEN_H = 720
-THUMB_W = 600
-THUMB_H = 600
+
 
 
 class SonosDisplaySetupError(Exception):
@@ -25,6 +22,12 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
 
     def __init__(self, loop, show_details, show_artist_and_album, show_details_timeout):
         """Initialize the display controller."""
+        
+        self.SCREEN_W = 720
+        self.SCREEN_H = 720
+        self.THUMB_W = 600
+        self.THUMB_H = 600
+        
         self.loop = loop
         self.show_details = show_details
         self.show_artist_and_album = show_artist_and_album
@@ -32,6 +35,10 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
 
         self.album_image = None
         self.thumb_image = None
+        self.label_track = None
+        self.label_detail = None
+        self.track_font = None
+        self.detail_font = None
         self.timeout_future = None
         self.is_showing = False
 
@@ -50,20 +57,20 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
                 _LOGGER.error("Cannot access display: %s", error)
                 raise SonosDisplaySetupError
 
-        self.root.geometry(f"{SCREEN_W}x{SCREEN_H}")
+        self.root.geometry(f"{self.SCREEN_W}x{self.SCREEN_H}")
 
         self.album_frame = tk.Frame(
-            self.root, bg="black", width=SCREEN_W, height=SCREEN_H
+            self.root, bg="black", width=self.SCREEN_W, height=self.SCREEN_H
         )
         self.album_frame.grid(row=0, column=0, sticky="news")
 
         self.detail_frame = tk.Frame(
-            self.root, bg="black", width=SCREEN_W, height=SCREEN_H
+            self.root, bg="black", width=self.SCREEN_W, height=self.SCREEN_H
         )
         self.detail_frame.grid(row=0, column=0, sticky="news")
 
         self.curtain_frame = tk.Frame(
-            self.root, bg="black", width=SCREEN_W, height=SCREEN_H
+            self.root, bg="black", width=self.SCREEN_W, height=self.SCREEN_H
         )
         self.curtain_frame.grid(row=0, column=0, sticky="news")
 
@@ -71,10 +78,10 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
         self.detail_text = tk.StringVar()
 
         if show_artist_and_album:
-            track_font = tkFont.Font(family="Helvetica", size=30)
+            self.track_font = tkFont.Font(family="Helvetica", size=30)
         else:
-            track_font = tkFont.Font(family="Helvetica", size=40)
-        detail_font = tkFont.Font(family="Helvetica", size=15)
+            self.track_font = tkFont.Font(family="Helvetica", size=40)
+        self.detail_font = tkFont.Font(family="Helvetica", size=15)
 
         self.label_albumart = tk.Label(
             self.album_frame,
@@ -94,27 +101,27 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
             fg="white",
             bg="black",
         )
-        label_track = tk.Label(
+        self.label_track = tk.Label(
             self.detail_frame,
             textvariable=self.track_name,
-            font=track_font,
+            font=self.track_font,
             fg="white",
             bg="black",
             wraplength=600,
             justify="center",
         )
-        label_detail = tk.Label(
+        self.label_detail = tk.Label(
             self.detail_frame,
             textvariable=self.detail_text,
-            font=detail_font,
+            font=self.detail_font,
             fg="white",
             bg="black",
             wraplength=600,
             justify="center",
         )
-        self.label_albumart_detail.place(relx=0.5, y=THUMB_H / 2, anchor=tk.CENTER)
-        label_track.place(relx=0.5, y=THUMB_H + 20, anchor=tk.N)
-        label_detail.place(relx=0.5, y=SCREEN_H - 10, anchor=tk.S)
+        self.label_albumart_detail.place(relx=0.5, y=self.THUMB_H / 2, anchor=tk.CENTER)
+        self.label_track.place(relx=0.5, y=self.THUMB_H + 20, anchor=tk.N)
+        self.label_detail.place(relx=0.5, y=self.SCREEN_H - 10, anchor=tk.S)
 
         self.album_frame.grid_propagate(False)
         self.detail_frame.grid_propagate(False)
@@ -158,21 +165,41 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
     def update(self, image, sonos_data):
         """Update displayed image and text."""
 
+        display_trackname = sonos_data.trackname or sonos_data.station
+
         def resize_image(image, length):
             """Resizes the image, assumes square image."""
             image = image.resize((length, length), ImageTk.Image.ANTIALIAS)
             return ImageTk.PhotoImage(image)
 
+        if self.show_artist_and_album:
+            if len(display_trackname) > 30:
+                self.track_font = tkFont.Font(family="Helvetica", size=25)
+                self.THUMB_H = 580
+                self.THUMB_W = 580
+                print(display_trackname)
+
+            else:
+                self.track_font = tkFont.Font(family="Helvetica", size=30)
+                self.THUMB_H = 600
+                self.THUMB_W = 600
+        else:
+            self.track_font = tkFont.Font(family="Helvetica", size=30)
+        
         # Store the images as attributes to preserve scope for Tk
-        self.album_image = resize_image(image, SCREEN_W)
-        self.thumb_image = resize_image(image, THUMB_W)
+        self.album_image = resize_image(image, self.SCREEN_W)
+        self.thumb_image = resize_image(image, self.THUMB_W)
+
+        self.label_albumart_detail.place(relx=0.5, y=self.THUMB_H / 2, anchor=tk.CENTER)
+        self.label_track.place(relx=0.5, y=self.THUMB_H + 20, anchor=tk.N)
+        self.label_detail.place(relx=0.5, y=self.SCREEN_H - 10, anchor=tk.S)
 
         self.label_albumart.configure(image=self.album_image)
         self.label_albumart_detail.configure(image=self.thumb_image)
+        self.label_track.configure(font=self.track_font)
 
         detail_text = ""
-        display_trackname = sonos_data.trackname or sonos_data.station
-
+        
         if self.show_artist_and_album:
             detail_prefix = None
             detail_suffix = sonos_data.album or None
