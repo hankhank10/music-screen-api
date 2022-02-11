@@ -25,8 +25,8 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
         
         self.SCREEN_W = 720
         self.SCREEN_H = 720
-        self.THUMB_W = 600
-        self.THUMB_H = 600
+        self.THUMB_W = 620
+        self.THUMB_H = 620
         
         self.loop = loop
         self.show_details = show_details
@@ -120,7 +120,7 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
             justify="center",
         )
         self.label_albumart_detail.place(relx=0.5, y=self.THUMB_H / 2, anchor=tk.CENTER)
-        self.label_track.place(relx=0.5, y=self.THUMB_H + 20, anchor=tk.N)
+        self.label_track.place(relx=0.5, y=self.THUMB_H + 10, anchor=tk.N)
         self.label_detail.place(relx=0.5, y=self.SCREEN_H - 10, anchor=tk.S)
 
         self.album_frame.grid_propagate(False)
@@ -165,39 +165,15 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
     def update(self, image, sonos_data):
         """Update displayed image and text."""
 
-        display_trackname = sonos_data.trackname or sonos_data.station
-
         def resize_image(image, length):
             """Resizes the image, assumes square image."""
             image = image.resize((length, length), ImageTk.Image.ANTIALIAS)
             return ImageTk.PhotoImage(image)
 
-        if self.show_artist_and_album:
-            if len(display_trackname) > 30:
-                self.track_font = tkFont.Font(family="Helvetica", size=25)
-                self.THUMB_H = 580
-                self.THUMB_W = 580
-            else:
-                self.track_font = tkFont.Font(family="Helvetica", size=30)
-                self.THUMB_H = 600
-                self.THUMB_W = 600
-        else:
-            self.track_font = tkFont.Font(family="Helvetica", size=30)
-        
-        # Store the images as attributes to preserve scope for Tk
-        self.album_image = resize_image(image, self.SCREEN_W)
-        self.thumb_image = resize_image(image, self.THUMB_W)
-
-        self.label_albumart_detail.place(relx=0.5, y=self.THUMB_H / 2, anchor=tk.CENTER)
-        self.label_track.place(relx=0.5, y=self.THUMB_H + 20, anchor=tk.N)
-        self.label_detail.place(relx=0.5, y=self.SCREEN_H - 10, anchor=tk.S)
-
-        self.label_albumart.configure(image=self.album_image)
-        self.label_albumart_detail.configure(image=self.thumb_image)
-        self.label_track.configure(font=self.track_font)
+        display_trackname = sonos_data.trackname or sonos_data.station
 
         detail_text = ""
-        
+
         if self.show_artist_and_album:
             detail_prefix = None
             detail_suffix = sonos_data.album or None
@@ -206,6 +182,40 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
                 detail_prefix = sonos_data.artist
 
             detail_text = " • ".join(filter(None, [detail_prefix, detail_suffix]))
+
+        if self.show_artist_and_album:
+            if len(display_trackname) > 30:
+                self.track_font = tkFont.Font(family="Helvetica", size=25)
+                if len(detail_text) >55:
+                    self.THUMB_H = 560
+                    self.THUMB_W = 560
+                else:
+                    self.THUMB_H = 580
+                    self.THUMB_W = 580
+            else:
+                self.track_font = tkFont.Font(family="Helvetica", size=30)
+                if len(detail_text) >45:
+                    self.THUMB_H = 600
+                    self.THUMB_W = 600
+                else:
+                    self.THUMB_H = 620
+                    self.THUMB_W = 620
+        else:
+            self.track_font = tkFont.Font(family="Helvetica", size=40)
+            self.THUMB_H = 620
+            self.THUMB_W = 620
+        
+        # Store the images as attributes to preserve scope for Tk
+        self.album_image = resize_image(image, self.SCREEN_W)
+        self.thumb_image = resize_image(image, self.THUMB_W)
+
+        self.label_albumart_detail.place(relx=0.5, y=self.THUMB_H / 2, anchor=tk.CENTER)
+        self.label_track.place(relx=0.5, y=self.THUMB_H + 10, anchor=tk.N)
+        self.label_detail.place(relx=0.5, y=self.SCREEN_H - 10, anchor=tk.S)
+
+        self.label_albumart.configure(image=self.album_image)
+        self.label_albumart_detail.configure(image=self.thumb_image)
+        self.label_track.configure(font=self.track_font)
 
         self.track_name.set(display_trackname)
         self.detail_text.set(detail_text)
