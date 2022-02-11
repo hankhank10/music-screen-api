@@ -186,7 +186,7 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
         if self.show_artist_and_album:
             if len(display_trackname) > 30:
                 self.track_font = tkFont.Font(family="Helvetica", size=25)
-                if len(detail_text) >55:
+                if len(detail_text) >45:
                     self.THUMB_H = 560
                     self.THUMB_W = 560
                 else:
