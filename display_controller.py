@@ -16,7 +16,7 @@ class SonosDisplaySetupError(Exception):
 class DisplayController:  # pylint: disable=too-many-instance-attributes
     """Controller to handle the display hardware and GUI interface."""
 
-    def __init__(self, loop, show_details, show_artist_and_album, show_details_timeout):
+    def __init__(self, loop, show_details, show_artist_and_album, show_details_timeout, overlay_text):
         """Initialize the display controller."""
         
         self.SCREEN_W = 720
@@ -28,6 +28,7 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
         self.show_details = show_details
         self.show_artist_and_album = show_artist_and_album
         self.show_details_timeout = show_details_timeout
+        self.overlay_text = overlay_text
 
         self.album_image = None
         self.thumb_image = None
@@ -206,11 +207,15 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
         
         # Store the images as attributes to preserve scope for Tk
         self.album_image = resize_image(image, self.SCREEN_W)
-        self.thumb_image = resize_image(image, self.THUMB_W)
-
-        self.label_albumart_detail.place(relx=0.5, y=self.THUMB_H / 2, anchor=tk.CENTER)
+        if self.overlay_text:
+            self.thumb_image = resize_image(image, self.SCREEN_W)
+            self.label_albumart_detail.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+        else:
+            self.thumb_image = resize_image(image, self.THUMB_W)
+            self.label_albumart_detail.place(relx=0.5, y=self.THUMB_H / 2, anchor=tk.CENTER)
+        
         self.label_track.place(relx=0.5, y=self.THUMB_H + 10, anchor=tk.N)
-        if detail_text == "":
+        if detail_text == "" or not self.show_artist_and_album:
             self.label_detail.place(relx=0.5, y=self.SCREEN_H + 10, anchor=tk.S)
         else:
             self.label_detail.place(relx=0.5, y=self.SCREEN_H - 10, anchor=tk.S)
