@@ -111,9 +111,9 @@ class SonosData():
                         self.artist = ""
                     else : 
                         #self.artist = ' '.join(word[0].upper() + word[1:] for word in splitstr[3].split())[6:]
-                        self.artist = SplitStr[3][6:]
+                        self.artist = SplitStr[3][7:]
                         #self.raw_trackname = ' '.join(word[0].upper() + word[1:] for word in splitstr[2].split())[5:]
-                        self.raw_trackname = SplitStr[2][5:]
+                        self.raw_trackname = SplitStr[2][6:]
                     if c == "~" :
                         self.album = ' '.join(word[0].upper() + word[1:] for word in splitstr[2].split())
                     else :
