@@ -195,15 +195,23 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
                     self.track_font = tkFont.Font(family="Helvetica", size=40)
                 else:
                     self.track_font = tkFont.Font(family="Helvetica", size=30)
+            
+            if len(display_trackname) > 30 and len(display_trackname) < 42:
+                self.THUMB_H = self.THUMB_H + 30
+                self.THUMB_W = self.THUMB_W + 30
         else:
-            if len(display_trackname) > 20:
+            if len(display_trackname) > 22:
                 self.THUMB_H = 600
                 self.THUMB_W = 600
                 self.track_font = tkFont.Font(family="Helvetica", size=30)
             else:
                 self.THUMB_H = 620
                 self.THUMB_W = 620
-                self.track_font = tkFont.Font(family="Helvetica", size=40) 
+                self.track_font = tkFont.Font(family="Helvetica", size=40)
+
+            if len(display_trackname) > 22 and len(display_trackname) < 35:
+                self.THUMB_H = self.THUMB_H + 40
+                self.THUMB_W = self.THUMB_W + 40 
         
         # Store the images as attributes to preserve scope for Tk
         self.album_image = resize_image(image, self.SCREEN_W)
@@ -216,9 +224,20 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
         
         self.label_track.place(relx=0.5, y=self.THUMB_H + 10, anchor=tk.N)
         if detail_text == "" or not self.show_artist_and_album:
-            self.label_detail.place(relx=0.5, y=self.SCREEN_H + 10, anchor=tk.S)
+            self.label_detail.destroy()
         else:
+            if self.label_detail.winfo_exists() == 0:
+                self.label_detail = tk.Label(
+                    self.detail_frame,
+                    textvariable=self.detail_text,
+                    font=self.detail_font,
+                    fg="white",
+                    bg="black",
+                    wraplength=600,
+                    justify="center",
+                )
             self.label_detail.place(relx=0.5, y=self.SCREEN_H - 10, anchor=tk.S)
+            self.label_detail.configure(font=self.detail_font)
 
         self.label_albumart.configure(image=self.album_image)
         self.label_albumart_detail.configure(image=self.thumb_image)
@@ -232,3 +251,5 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
     def cleanup(self):
         """Run cleanup actions."""
         self.backlight.cleanup()
+
+
