@@ -2,7 +2,7 @@
 import logging
 import os
 import tkinter as tk
-from tkinter import font as tkFont
+from tkinter import Y, font as tkFont
 
 from PIL import ImageTk
 
@@ -16,7 +16,7 @@ class SonosDisplaySetupError(Exception):
 class DisplayController:  # pylint: disable=too-many-instance-attributes
     """Controller to handle the display hardware and GUI interface."""
 
-    def __init__(self, loop, show_details, show_artist_and_album, show_details_timeout, overlay_text):
+    def __init__(self, loop, show_details, show_artist_and_album, show_details_timeout, overlay_text, show_play_state):
         """Initialize the display controller."""
         
         self.SCREEN_W = 720
@@ -29,11 +29,13 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
         self.show_artist_and_album = show_artist_and_album
         self.show_details_timeout = show_details_timeout
         self.overlay_text = overlay_text
+        self.show_play_state = show_play_state
 
         self.album_image = None
         self.thumb_image = None
         self.label_track = None
         self.label_detail = None
+        self.label_play_state = None
         self.track_font = None
         self.detail_font = None
         self.timeout_future = None
@@ -73,8 +75,10 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
 
         self.track_name = tk.StringVar()
         self.detail_text = tk.StringVar()
+        self.play_state_text = tk.StringVar()
 
         self.detail_font = tkFont.Font(family="Helvetica", size=15)
+        self.play_state_font = tkFont.Font(family="Helvetica", size=15)
 
         self.label_albumart = tk.Label(
             self.album_frame,
@@ -106,6 +110,14 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
             self.detail_frame,
             textvariable=self.detail_text,
             font=self.detail_font,
+            fg="white",
+            bg="black",
+            wraplength=600,
+            justify="center",
+        )
+        self.label_play_state = tk.Label(
+            self.detail_frame,
+            textvariable=self.play_state_text,
             fg="white",
             bg="black",
             wraplength=600,
@@ -162,6 +174,7 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
         display_trackname = sonos_data.trackname or sonos_data.station
 
         detail_text = ""
+        play_state_text = ""
 
         if self.show_artist_and_album:
             detail_prefix = None
@@ -171,6 +184,22 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
                 detail_prefix = sonos_data.artist
 
             detail_text = " • ".join(filter(None, [detail_prefix, detail_suffix]))
+
+        if self.show_play_state:
+            play_state_volume = sonos_data.volume or None
+            play_state_shuffle = sonos_data.shuffle or None
+            play_state_repeat = sonos_data.repeat or None
+            play_state_crossfade = sonos_data.crossfade or None
+
+            play_state_volume_text = "Volume: " + str(play_state_volume)
+
+            play_state_shuffle_text = "Shuffle: " + str(play_state_shuffle)
+
+            play_state_repeat_text = "Repeat: " + str(play_state_repeat)
+
+            play_state_crossfade_text = "Crossfade: " + str(play_state_crossfade)
+
+            play_state_text = " • ".join(filter(None, [play_state_volume_text, play_state_shuffle_text, play_state_repeat_text, play_state_crossfade_text]))
 
         if self.show_artist_and_album:
             if len(display_trackname) > 30:
@@ -196,7 +225,7 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
                 else:
                     self.track_font = tkFont.Font(family="Helvetica", size=30)
             
-            if len(display_trackname) > 30 and len(display_trackname) < 42:
+            if len(display_trackname) > 30 and len(display_trackname) < 50:
                 self.THUMB_H = self.THUMB_H + 30
                 self.THUMB_W = self.THUMB_W + 30
         else:
@@ -211,7 +240,7 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
 
             if len(display_trackname) > 22 and len(display_trackname) < 35:
                 self.THUMB_H = self.THUMB_H + 40
-                self.THUMB_W = self.THUMB_W + 40 
+                self.THUMB_W = self.THUMB_W + 40
         
         # Store the images as attributes to preserve scope for Tk
         self.album_image = resize_image(image, self.SCREEN_W)
@@ -223,6 +252,7 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
             self.label_albumart_detail.place(relx=0.5, y=self.THUMB_H / 2, anchor=tk.CENTER)
         
         self.label_track.place(relx=0.5, y=self.THUMB_H + 10, anchor=tk.N)
+        
         if detail_text == "" or not self.show_artist_and_album:
             self.label_detail.destroy()
         else:
@@ -239,17 +269,33 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
             self.label_detail.place(relx=0.5, y=self.SCREEN_H - 10, anchor=tk.S)
             self.label_detail.configure(font=self.detail_font)
 
+        if not self.show_play_state:
+            self.label_play_state.destroy()
+        else:
+            if self.label_play_state.winfo_exists() == 0:
+                self.label_play_state = tk.Label(
+                    self.detail_frame,
+                    textvariable=self.play_state_text,
+                    font=self.play_state_font,
+                    fg="white",
+                    bg="black",
+                    wraplength=600,
+                    justify="center",
+                )
+            self.label_play_state.place(relx=0.5, y= 10, anchor=tk.N)
+            self.label_play_state.configure(font=self.play_state_font)
+        
         self.label_albumart.configure(image=self.album_image)
         self.label_albumart_detail.configure(image=self.thumb_image)
         self.label_track.configure(font=self.track_font)
 
         self.track_name.set(display_trackname)
         self.detail_text.set(detail_text)
+        self.play_state_text.set(play_state_text)
         self.root.update_idletasks()
         self.show_album(self.show_details, self.show_details_timeout)
 
     def cleanup(self):
         """Run cleanup actions."""
         self.backlight.cleanup()
-
 
