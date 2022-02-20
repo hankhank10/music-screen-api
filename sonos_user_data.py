@@ -43,6 +43,11 @@ class SonosData():
         self.image_uri = ""
         self.status = ""
 
+        self.volume = 0
+        self.repeat = ""
+        self.shuffle = ""
+        self.crossfade = ""
+
     @property
     def last_update(self):
         if self.last_webhook > self.last_poll:
@@ -84,6 +89,11 @@ class SonosData():
         self.album = payload['currentTrack'].get('album', "")
         self.station = payload['currentTrack'].get('stationName', "")
         self.uri = payload['currentTrack'].get('uri', "")
+
+        self.volume = payload.get('volume', "")
+        self.repeat = payload['playMode'].get('repeat', "")
+        self.shuffle = payload['playMode'].get('shuffle', "")
+        self.crossfade = payload['playMode'].get('crossfade', "")
 
         if sonos_settings.artist_and_album_newlook :
            if self.raw_trackname.startswith("x-sonosapi-") :
