@@ -39,6 +39,9 @@ artist_and_album_newlook = True
 # Display Track, Album and Artist Information over fullscreen Album Art
 overlay_text = True
 
+# Also displaying state (volume, repeat, shuffle and crossfade) . Ignored if 'show_details' is False.
+show_play_state = True
+
 # Turn off display (and backlight) when Sonos is playing from a TV source
 sleep_on_tv = False
 
