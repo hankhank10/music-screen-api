@@ -78,7 +78,7 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
         self.play_state_text = tk.StringVar()
 
         self.detail_font = tkFont.Font(family="Helvetica", size=15)
-        self.play_state_font = tkFont.Font(family="Helvetica", size=15)
+        self.play_state_font = tkFont.Font(family="Helvetica", size=17)
 
         self.label_albumart = tk.Label(
             self.album_frame,
@@ -120,7 +120,7 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
             textvariable=self.play_state_text,
             fg="white",
             bg="black",
-            wraplength=600,
+            wraplength=700,
             justify="center",
         )
 
@@ -225,9 +225,13 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
                 else:
                     self.track_font = tkFont.Font(family="Helvetica", size=30)
             
-            if len(display_trackname) > 30 and len(display_trackname) < 50:
+            if len(display_trackname) > 30 and len(display_trackname) < 42:
                 self.THUMB_H = self.THUMB_H + 30
                 self.THUMB_W = self.THUMB_W + 30
+            
+            if len(detail_text) > 45 and len(display_trackname) < 50:
+                self.THUMB_H = self.THUMB_H + 20
+                self.THUMB_W = self.THUMB_W + 20
         else:
             if len(display_trackname) > 22:
                 self.THUMB_H = 600
@@ -241,6 +245,10 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
             if len(display_trackname) > 22 and len(display_trackname) < 35:
                 self.THUMB_H = self.THUMB_H + 40
                 self.THUMB_W = self.THUMB_W + 40
+
+            if len(detail_text) > 45 and len(display_trackname) < 50:
+                self.THUMB_H = self.THUMB_H + 20
+                self.THUMB_W = self.THUMB_W + 20
         
         # Store the images as attributes to preserve scope for Tk
         self.album_image = resize_image(image, self.SCREEN_W)
@@ -298,4 +306,3 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
     def cleanup(self):
         """Run cleanup actions."""
         self.backlight.cleanup()
-
