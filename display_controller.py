@@ -230,8 +230,9 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
                 self.THUMB_W = self.THUMB_W + 30
             
             if len(detail_text) > 45 and len(display_trackname) < 50:
-                self.THUMB_H = self.THUMB_H + 15
-                self.THUMB_W = self.THUMB_W + 15
+                self.THUMB_H = self.THUMB_H + 20
+                self.THUMB_W = self.THUMB_W + 20
+
         else:
             if len(display_trackname) > 22:
                 self.THUMB_H = 600
@@ -247,8 +248,8 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
                 self.THUMB_W = self.THUMB_W + 40
 
             if len(detail_text) > 45 and len(display_trackname) < 50:
-                self.THUMB_H = self.THUMB_H + 15
-                self.THUMB_W = self.THUMB_W + 15
+                self.THUMB_H = self.THUMB_H + 20
+                self.THUMB_W = self.THUMB_W + 20
         
         # Store the images as attributes to preserve scope for Tk
         self.album_image = resize_image(image, self.SCREEN_W)
