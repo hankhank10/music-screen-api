@@ -155,9 +155,10 @@ async def main(loop):
     log_git_hash()
     show_details_timeout = getattr(sonos_settings, "show_details_timeout", None)
     overlay_text = getattr(sonos_settings, "overlay_text", None)
+    show_play_state = getattr(sonos_settings, "show_play_state", None)
     
     try:
-        display = DisplayController(loop, sonos_settings.show_details, sonos_settings.show_artist_and_album, show_details_timeout, overlay_text)
+        display = DisplayController(loop, sonos_settings.show_details, sonos_settings.show_artist_and_album, show_details_timeout, overlay_text, show_play_state)
     except SonosDisplaySetupError:
         loop.stop()
         return
