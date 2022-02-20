@@ -288,7 +288,7 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
                     font=self.play_state_font,
                     fg="white",
                     bg="black",
-                    wraplength=600,
+                    wraplength=700,
                     justify="center",
                 )
             self.label_play_state.place(relx=0.5, y= 10, anchor=tk.N)
