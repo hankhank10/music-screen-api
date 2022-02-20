@@ -232,6 +232,7 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
             if len(detail_text) > 45 and len(display_trackname) < 50:
                 self.THUMB_H = self.THUMB_H + 20
                 self.THUMB_W = self.THUMB_W + 20
+
         else:
             if len(display_trackname) > 22:
                 self.THUMB_H = 600
