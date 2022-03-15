@@ -4,7 +4,9 @@ A set of scripts to display current and recent music information.
 
 It uses either the Pimoroni wHAT e-ink display to display track information; or the Pimoroni HyperPixel 4.0 Square (Non Touch) High Res display to display full colour album art.
 
-![Example of what it looks like](https://user-images.githubusercontent.com/25515609/84962206-370cf800-b0fe-11ea-99c9-b3546d847ecc.jpg)
+![sonos-music-api Examples of Display Modes](https://user-images.githubusercontent.com/42817877/153710473-2fbe9534-b7d6-423e-8fd3-20193611c99e.png)
+
+![sonos-music-api Examples of Display Modes Show Play Settings](https://user-images.githubusercontent.com/42817877/154847772-57a21f42-88be-4cdb-9ed4-a182ecc746ad.png)
 
 Works in real time with your local Sonos sytem. Also includes functionality to pull last played tracks and music history from last.fm.
 
