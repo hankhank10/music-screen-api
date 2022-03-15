@@ -18,12 +18,12 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
 
     def __init__(self, loop, show_details, show_artist_and_album, show_details_timeout, overlay_text, show_play_state):
         """Initialize the display controller."""
-        
+
         self.SCREEN_W = 720
         self.SCREEN_H = 720
         self.THUMB_W = 0
         self.THUMB_H = 0
-        
+
         self.loop = loop
         self.show_details = show_details
         self.show_artist_and_album = show_artist_and_album
@@ -36,6 +36,7 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
         self.label_track = None
         self.label_detail = None
         self.label_play_state = None
+        self.label_play_state_album = None
         self.track_font = None
         self.detail_font = None
         self.timeout_future = None
@@ -123,6 +124,14 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
             wraplength=700,
             justify="center",
         )
+        self.label_play_state_album = tk.Label(
+            self.album_frame,
+            textvariable=self.play_state_text,
+            fg="white",
+            bg="black",
+            wraplength=700,
+            justify="center",
+        )
 
         self.album_frame.grid_propagate(False)
         self.detail_frame.grid_propagate(False)
@@ -146,6 +155,7 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
                 self.timeout_future = self.loop.call_later(detail_timeout, handle_timeout)
         else:
             self.album_frame.lift()
+            self.label_play_state_album.destroy()
 
         self.is_showing = True
         self.root.update()
@@ -203,7 +213,7 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
 
         if self.show_artist_and_album:
             if len(display_trackname) > 30:
-                if len(detail_text) > 45:
+                if len(detail_text) > 60:
                     self.THUMB_H = 560
                     self.THUMB_W = 560
                 else:
@@ -214,7 +224,7 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
                 else:
                     self.track_font = tkFont.Font(family="Helvetica", size=25)
             else:
-                if len(detail_text) > 45:
+                if len(detail_text) > 60:
                     self.THUMB_H = 600
                     self.THUMB_W = 600
                 else:
@@ -222,35 +232,36 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
                     self.THUMB_W = 620
                 if detail_text == "":
                     self.track_font = tkFont.Font(family="Helvetica", size=40)
+                    self.THUMB_H = self.THUMB_H + 20
+                    self.THUMB_W = self.THUMB_W + 20
                 else:
                     self.track_font = tkFont.Font(family="Helvetica", size=30)
-            
-            if len(display_trackname) > 30 and len(display_trackname) < 42:
-                self.THUMB_H = self.THUMB_H + 30
-                self.THUMB_W = self.THUMB_W + 30
-            
-            if len(detail_text) > 45 and len(display_trackname) < 50:
-                self.THUMB_H = self.THUMB_H + 20
-                self.THUMB_W = self.THUMB_W + 20
 
+            if len(display_trackname) > 30 and len(display_trackname) < 36:
+                self.THUMB_H = self.THUMB_H + 40
+                self.THUMB_W = self.THUMB_W + 40
+            
+            #if len(detail_text) > 45 and len(detail_text) < 50:
+            #    self.THUMB_H = self.THUMB_H + 20
+            #    self.THUMB_W = self.THUMB_W + 20
         else:
             if len(display_trackname) > 22:
-                self.THUMB_H = 600
-                self.THUMB_W = 600
+                self.THUMB_H = 610
+                self.THUMB_W = 610
                 self.track_font = tkFont.Font(family="Helvetica", size=30)
             else:
-                self.THUMB_H = 620
-                self.THUMB_W = 620
+                self.THUMB_H = 640
+                self.THUMB_W = 640
                 self.track_font = tkFont.Font(family="Helvetica", size=40)
 
             if len(display_trackname) > 22 and len(display_trackname) < 35:
                 self.THUMB_H = self.THUMB_H + 40
                 self.THUMB_W = self.THUMB_W + 40
 
-            if len(detail_text) > 45 and len(display_trackname) < 50:
-                self.THUMB_H = self.THUMB_H + 20
-                self.THUMB_W = self.THUMB_W + 20
-        
+            #if len(detail_text) > 45 and len(detail_text) < 50:
+            #    self.THUMB_H = self.THUMB_H + 20
+            #    self.THUMB_W = self.THUMB_W + 20
+
         # Store the images as attributes to preserve scope for Tk
         self.album_image = resize_image(image, self.SCREEN_W)
         if self.overlay_text:
@@ -259,9 +270,9 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
         else:
             self.thumb_image = resize_image(image, self.THUMB_W)
             self.label_albumart_detail.place(relx=0.5, y=self.THUMB_H / 2, anchor=tk.CENTER)
-        
+
         self.label_track.place(relx=0.5, y=self.THUMB_H + 10, anchor=tk.N)
-        
+
         if detail_text == "" or not self.show_artist_and_album:
             self.label_detail.destroy()
         else:
@@ -280,6 +291,7 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
 
         if not self.show_play_state:
             self.label_play_state.destroy()
+            self.label_play_state_album.destroy()
         else:
             if self.label_play_state.winfo_exists() == 0:
                 self.label_play_state = tk.Label(
@@ -288,12 +300,25 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
                     font=self.play_state_font,
                     fg="white",
                     bg="black",
-                    wraplength=600,
+                    wraplength=700,
                     justify="center",
                 )
             self.label_play_state.place(relx=0.5, y= 10, anchor=tk.N)
             self.label_play_state.configure(font=self.play_state_font)
-        
+
+            if self.label_play_state_album.winfo_exists() == 0:
+                self.label_play_state_album = tk.Label(
+                    self.album_frame,
+                    textvariable=self.play_state_text,
+                    font=self.play_state_font,
+                    fg="white",
+                    bg="black",
+                    wraplength=700,
+                    justify="center",
+                )
+            self.label_play_state_album.place(relx=0.5, y= 10, anchor=tk.N)
+            self.label_play_state_album.configure(font=self.play_state_font)
+
         self.label_albumart.configure(image=self.album_image)
         self.label_albumart_detail.configure(image=self.thumb_image)
         self.label_track.configure(font=self.track_font)
