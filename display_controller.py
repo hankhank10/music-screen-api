@@ -237,7 +237,7 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
                 else:
                     self.track_font = tkFont.Font(family="Helvetica", size=30)
 
-            if len(display_trackname) > 30 and len(display_trackname) < 36:
+            if len(display_trackname) > 30 and len(display_trackname) < 39:
                 self.THUMB_H = self.THUMB_H + 40
                 self.THUMB_W = self.THUMB_W + 40
             
