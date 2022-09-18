@@ -6,3 +6,4 @@ sonos_settings.py
 .idea/modules.xml
 .idea/music-screen-api.iml
 .idea/vcs.xml
+.idea/*
