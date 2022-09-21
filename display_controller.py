@@ -78,8 +78,8 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
         self.detail_text = tk.StringVar()
         self.play_state_text = tk.StringVar()
 
-        self.detail_font = tkFont.Font(family="Helvetica", size=15)
-        self.play_state_font = tkFont.Font(family="Helvetica", size=17)
+        self.detail_font = tkFont.Font(family="consolas", size=14)
+        self.play_state_font = tkFont.Font(family="consolas", size=14)
 
         self.label_albumart = tk.Label(
             self.album_frame,
@@ -203,64 +203,60 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
 
             play_state_volume_text = "Volume: " + str(play_state_volume)
 
-            play_state_shuffle_text = "Shuffle: " + str(play_state_shuffle)
+            play_state_shuffle_text = "Shuffle: " + str(play_state_shuffle).capitalize()
 
-            play_state_repeat_text = "Repeat: " + str(play_state_repeat)
+            play_state_repeat_text = "Repeat: " + str(play_state_repeat).capitalize()
 
-            play_state_crossfade_text = "Crossfade: " + str(play_state_crossfade)
+            play_state_crossfade_text = "Crossfade: " + str(play_state_crossfade).capitalize()
 
             play_state_text = " • ".join(filter(None, [play_state_volume_text, play_state_shuffle_text, play_state_repeat_text, play_state_crossfade_text]))
 
+        #display_trackname = "12345678901234567890"
+        #detail_text = "123456789012345678901234567890123456789012345678901234567890"
+
         if self.show_artist_and_album:
-            if len(display_trackname) > 30:
-                if len(detail_text) > 60:
-                    self.THUMB_H = 560
-                    self.THUMB_W = 560
+            if len(display_trackname) > 27:
+                if len(detail_text) > 54:
+                    self.THUMB_H = 565
+                    self.THUMB_W = 565
                 else:
-                    self.THUMB_H = 580
-                    self.THUMB_W = 580
+                    self.THUMB_H = 590
+                    self.THUMB_W = 590
                 if detail_text == "":
-                    self.track_font = tkFont.Font(family="Helvetica", size=30)
+                    self.track_font = tkFont.Font(family="consolas", size=27)
                 else:
-                    self.track_font = tkFont.Font(family="Helvetica", size=25)
+                    self.track_font = tkFont.Font(family="consolas", size=22)
             else:
-                if len(detail_text) > 60:
+                if len(detail_text) > 54:
                     self.THUMB_H = 600
                     self.THUMB_W = 600
                 else:
                     self.THUMB_H = 620
                     self.THUMB_W = 620
                 if detail_text == "":
-                    self.track_font = tkFont.Font(family="Helvetica", size=40)
+                    self.track_font = tkFont.Font(family="consolas", size=37)
                     self.THUMB_H = self.THUMB_H + 20
                     self.THUMB_W = self.THUMB_W + 20
                 else:
-                    self.track_font = tkFont.Font(family="Helvetica", size=30)
+                    self.track_font = tkFont.Font(family="consolas", size=27)
 
-            if len(display_trackname) > 30 and len(display_trackname) < 39:
+            if len(display_trackname) > 27 and len(display_trackname) < 34:
                 self.THUMB_H = self.THUMB_H + 40
                 self.THUMB_W = self.THUMB_W + 40
             
-            #if len(detail_text) > 45 and len(detail_text) < 50:
-            #    self.THUMB_H = self.THUMB_H + 20
-            #    self.THUMB_W = self.THUMB_W + 20
         else:
             if len(display_trackname) > 22:
                 self.THUMB_H = 610
                 self.THUMB_W = 610
-                self.track_font = tkFont.Font(family="Helvetica", size=30)
+                self.track_font = tkFont.Font(family="consolas", size=27)
             else:
                 self.THUMB_H = 640
                 self.THUMB_W = 640
-                self.track_font = tkFont.Font(family="Helvetica", size=40)
+                self.track_font = tkFont.Font(family="consolas", size=37)
 
             if len(display_trackname) > 22 and len(display_trackname) < 35:
                 self.THUMB_H = self.THUMB_H + 40
                 self.THUMB_W = self.THUMB_W + 40
-
-            #if len(detail_text) > 45 and len(detail_text) < 50:
-            #    self.THUMB_H = self.THUMB_H + 20
-            #    self.THUMB_W = self.THUMB_W + 20
 
         # Store the images as attributes to preserve scope for Tk
         self.album_image = resize_image(image, self.SCREEN_W)
@@ -325,6 +321,7 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
 
         self.track_name.set(display_trackname)
         self.detail_text.set(detail_text)
+        
         self.play_state_text.set(play_state_text)
         self.root.update_idletasks()
         self.show_album(self.show_details, self.show_details_timeout)
@@ -332,3 +329,4 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
     def cleanup(self):
         """Run cleanup actions."""
         self.backlight.cleanup()
+
