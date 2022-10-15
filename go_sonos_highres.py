@@ -87,6 +87,7 @@ async def redraw(session, sonos_data, display):
         if sonos_settings.demaster and sonos_data.type not in ["line_in", "TV"]:
             offline = not getattr(sonos_settings, "demaster_query_cloud", False)
             sonos_data.trackname = await async_demaster.strip_name(sonos_data.trackname, session, offline)
+            sonos_data.album = await async_demaster.strip_name(sonos_data.album, session, offline)
 
         image_data = await get_image_data(session, sonos_data.image_uri)
         if image_data:

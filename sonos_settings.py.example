@@ -12,10 +12,10 @@ log_file = "~/music-screen-api.log"
 # One of ERROR, WARNING, INFO, DEBUG (in order of least to most verbose)
 log_level = "INFO"
 
-# Crop song names to remove nonsense such as "Remastered" or "live at"
+# Crop song and album names to remove nonsense such as "Remastered" or "live at"
 demaster = True
 
-# Send track names to http://demaster.hankapi.com for more advanced track name cleanup
+# Send track and album names to http://demaster.hankapi.com for more advanced track name cleanup
 demaster_query_cloud = False
 
 
