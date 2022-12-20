@@ -61,6 +61,7 @@ async def redraw(session, sonos_data, display):
         return
 
     pil_image = None
+    code_image = None
 
     def should_sleep():
         """Determine if screen should be sleeping."""
@@ -101,7 +102,22 @@ async def redraw(session, sonos_data, display):
             pil_image = Image.open(sys.path[0] + "/sonos.png")
             _LOGGER.warning("Image not available, using default")
 
-        display.update(pil_image, sonos_data)
+        spotify_code_uri = "https://scannables.scdn.co/uri/plain/png/368A7D/white/320/spotify:track:5wEoNauEpwOc2rlU0274oT"
+
+        if spotify_code_uri != None: 
+            code_data = await get_image_data(session, spotify_code_uri)
+            if code_data:
+               code_image = Image.open(BytesIO(code_data))
+            else:
+               code_image = None
+        else:
+            code_image = None
+        
+        if code_image == None:
+            #code_image = Image.open(sys.path[0] + "/spotify_code.png")
+            _LOGGER.warning("Spotify Code not available, using default")
+
+        display.update(code_image, pil_image, sonos_data)
     else:
         display.hide_album()
 
@@ -157,9 +173,10 @@ async def main(loop):
     show_details_timeout = getattr(sonos_settings, "show_details_timeout", None)
     overlay_text = getattr(sonos_settings, "overlay_text", None)
     show_play_state = getattr(sonos_settings, "show_play_state", None)
+    show_spotify_code = getattr(sonos_settings, "show_spotify_code", None)
     
     try:
-        display = DisplayController(loop, sonos_settings.show_details, sonos_settings.show_artist_and_album, show_details_timeout, overlay_text, show_play_state)
+        display = DisplayController(loop, sonos_settings.show_details, sonos_settings.show_artist_and_album, show_details_timeout, overlay_text, show_play_state, show_spotify_code)
     except SonosDisplaySetupError:
         loop.stop()
         return

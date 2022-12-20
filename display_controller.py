@@ -16,7 +16,7 @@ class SonosDisplaySetupError(Exception):
 class DisplayController:  # pylint: disable=too-many-instance-attributes
     """Controller to handle the display hardware and GUI interface."""
 
-    def __init__(self, loop, show_details, show_artist_and_album, show_details_timeout, overlay_text, show_play_state):
+    def __init__(self, loop, show_details, show_artist_and_album, show_details_timeout, overlay_text, show_play_state, show_spotify_code):
         """Initialize the display controller."""
 
         self.SCREEN_W = 720
@@ -30,6 +30,7 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
         self.show_details_timeout = show_details_timeout
         self.overlay_text = overlay_text
         self.show_play_state = show_play_state
+        self.show_spotify_code = show_spotify_code
 
         self.album_image = None
         self.thumb_image = None
@@ -37,6 +38,8 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
         self.label_detail = None
         self.label_play_state = None
         self.label_play_state_album = None
+        self.label_spotify_code = None
+        self.label_spotify_code_detail = None
         self.track_font = None
         self.detail_font = None
         self.timeout_future = None
@@ -132,6 +135,25 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
             wraplength=700,
             justify="center",
         )
+        self.label_spotify_code = tk.Label(
+            self.album_frame,
+            image=None,
+            borderwidth=0,
+            highlightthickness=0,
+            fg="white",
+            bg="#368A7D",
+        )
+        self.label_spotify_code.place(relx=0.75, y=40, anchor=tk.N)
+        
+        self.label_spotify_code_detail = tk.Label(
+            self.detail_frame,
+            image=None,
+            borderwidth=0,
+            highlightthickness=0,
+            fg="white",
+            bg="#368A7D",
+        )
+        self.label_spotify_code_detail.place(relx=0.75, y=40, anchor=tk.N)
 
         self.album_frame.grid_propagate(False)
         self.detail_frame.grid_propagate(False)
@@ -173,13 +195,16 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
         self.curtain_frame.lift()
         self.root.update()
 
-    def update(self, image, sonos_data):
+    def update(self, code_image, image, sonos_data):
         """Update displayed image and text."""
 
         def resize_image(image, length):
             """Resizes the image, assumes square image."""
             image = image.resize((length, length), ImageTk.Image.ANTIALIAS)
             return ImageTk.PhotoImage(image)
+
+        if code_image != None:
+           code_image = ImageTk.PhotoImage(code_image)
 
         display_trackname = sonos_data.trackname or sonos_data.station
 
@@ -210,9 +235,6 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
             play_state_crossfade_text = "Crossfade: " + str(play_state_crossfade).capitalize()
 
             play_state_text = " • ".join(filter(None, [play_state_volume_text, play_state_shuffle_text, play_state_repeat_text, play_state_crossfade_text]))
-
-        #display_trackname = "12345678901234567890"
-        #detail_text = "123456789012345678901234567890123456789012345678901234567890"
 
         if self.show_artist_and_album:
             if len(display_trackname) > 27:
@@ -314,6 +336,37 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
                 )
             self.label_play_state_album.place(relx=0.5, y= 10, anchor=tk.N)
             self.label_play_state_album.configure(font=self.play_state_font)
+
+        if not self.show_spotify_code or code_image == None or detail_text == "":
+            self.label_spotify_code.destroy()
+            self.label_spotify_code_detail.destroy()
+        else:
+            if self.label_spotify_code.winfo_exists() == 0:
+                self.label_spotify_code = tk.Label(
+                    self.detail_frame,
+                    image=None,
+                    borderwidth=0,
+                    highlightthickness=0,
+                    fg="white",
+                    bg="#368A7D",
+                )
+                self.label_spotify_code.place(relx=0.75, y=40, anchor=tk.N)
+                
+            if self.label_spotify_code_detail.winfo_exists() == 0:
+                self.label_spotify_code_detail = tk.Label(
+                    self.detail_frame,
+                    image=None,
+                    borderwidth=0,
+                    highlightthickness=0,
+                    fg="white",
+                    bg="#368A7D",
+                )
+                self.label_spotify_code_detail.place(relx=0.75, y=40, anchor=tk.N)
+
+            #self.label_spotify_code.place(x=10, y= 10, anchor=tk.NE)
+            self.label_play_state.configure(font=self.play_state_font)
+            self.label_spotify_code.configure(image=code_image)
+            self.label_spotify_code_detail.configure(image=code_image)     
 
         self.label_albumart.configure(image=self.album_image)
         self.label_albumart_detail.configure(image=self.thumb_image)
