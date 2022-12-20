@@ -37,6 +37,7 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 ###############################################################################
 # Functions
 
+
 async def get_image_data(session, url):
     """Return image data from a URL if available."""
     if not url:
@@ -46,7 +47,8 @@ async def get_image_data(session, url):
         async with session.get(url) as response:
             content_type = response.headers.get('content-type')
             if content_type and not content_type.startswith('image/'):
-                _LOGGER.warning("Not a valid image type (%s): %s", content_type, url)
+                _LOGGER.warning(
+                    "Not a valid image type (%s): %s", content_type, url)
                 return None
             return await response.read()
     except ClientError as err:
@@ -54,6 +56,7 @@ async def get_image_data(session, url):
     except Exception as err:
         _LOGGER.warning("Image failed to load: %s [%s]", url, err)
     return None
+
 
 async def redraw(session, sonos_data, display):
     """Redraw the screen with current data."""
@@ -86,7 +89,8 @@ async def redraw(session, sonos_data, display):
 
         # slim down the trackname
         if sonos_settings.demaster and sonos_data.type not in ["line_in", "TV"]:
-            offline = not getattr(sonos_settings, "demaster_query_cloud", False)
+            offline = not getattr(
+                sonos_settings, "demaster_query_cloud", False)
             sonos_data.trackname = await async_demaster.strip_name(sonos_data.trackname, session, offline)
             sonos_data.album = await async_demaster.strip_name(sonos_data.album, session, offline)
 
@@ -102,33 +106,46 @@ async def redraw(session, sonos_data, display):
             pil_image = Image.open(sys.path[0] + "/sonos.png")
             _LOGGER.warning("Image not available, using default")
 
-        spotify_code_uri = "https://scannables.scdn.co/uri/plain/png/368A7D/white/320/spotify:track:5wEoNauEpwOc2rlU0274oT"
+        spotify_code_path = "https://scannables.scdn.co/uri/plain/png/368A7D/white/320/"
+        if sonos_data.uri.startswith('x-sonos-spotify:'):
+           spotify_code_uri = sonos_data.uri.replace('x-sonos-spotify:', '')
+           #spotify_code_uri = "spotify:track:5wEoNauEpwOc2rlU0274oT"
+        else:
+            spotify_code_uri = None 
 
-        if spotify_code_uri != None: 
-            code_data = await get_image_data(session, spotify_code_uri)
+        if spotify_code_uri != None:
+            spotify_code_url = "".join(filter(None, [spotify_code_path, spotify_code_uri]))
+        else:
+            spotify_code_url = None
+
+        if spotify_code_url != None:
+            code_data = await get_image_data(session, spotify_code_url)
             if code_data:
-               code_image = Image.open(BytesIO(code_data))
+                code_image = Image.open(BytesIO(code_data))
             else:
-               code_image = None
+                code_image = None
         else:
             code_image = None
-        
+
         if code_image == None:
-            #code_image = Image.open(sys.path[0] + "/spotify_code.png")
+            # code_image = Image.open(sys.path[0] + "/spotify_code.png")
             _LOGGER.warning("Spotify Code not available, using default")
 
         display.update(code_image, pil_image, sonos_data)
     else:
         display.hide_album()
 
+
 def log_git_hash():
     """Log the current git hash for troubleshooting purposes."""
     try:
-        git_hash = subprocess.check_output(["git", "describe"], cwd=sys.path[0], text=True).strip()
+        git_hash = subprocess.check_output(
+            ["git", "describe"], cwd=sys.path[0], text=True).strip()
     except (OSError, subprocess.CalledProcessError) as err:
         _LOGGER.debug("Error getting current version: %s", err)
     else:
         _LOGGER.info("Current script version: %s", git_hash)
+
 
 def setup_logging():
     """Set up logging facilities for the script."""
@@ -164,40 +181,44 @@ def setup_logging():
         logger = logging.getLogger("")
         logger.addHandler(logfile_handler)
     else:
-        _LOGGER.error("Cannot write to %s, check permissions and ensure directory exists", log_path)
+        _LOGGER.error(
+            "Cannot write to %s, check permissions and ensure directory exists", log_path)
+
 
 async def main(loop):
     """Main process for script."""
     setup_logging()
     log_git_hash()
-    show_details_timeout = getattr(sonos_settings, "show_details_timeout", None)
+    show_details_timeout = getattr(
+        sonos_settings, "show_details_timeout", None)
     overlay_text = getattr(sonos_settings, "overlay_text", None)
     show_play_state = getattr(sonos_settings, "show_play_state", None)
     show_spotify_code = getattr(sonos_settings, "show_spotify_code", None)
-    
+
     try:
-        display = DisplayController(loop, sonos_settings.show_details, sonos_settings.show_artist_and_album, show_details_timeout, overlay_text, show_play_state, show_spotify_code)
+        display = DisplayController(loop, sonos_settings.show_details, sonos_settings.show_artist_and_album,
+                                    show_details_timeout, overlay_text, show_play_state, show_spotify_code)
     except SonosDisplaySetupError:
         loop.stop()
         return
 
     if sonos_settings.room_name_for_highres == "":
-        print ("No room name found in sonos_settings.py")
-        print ("You can specify a room name manually below")
-        print ("Note: manual entry works for testing purposes, but if you want this to run automatically on startup then you should specify a room name in sonos_settings.py")
-        print ("You can edit the file with the command: nano sonos_settings.py")
-        print ("")
-        sonos_room = input ("Enter a Sonos room name for testing purposes>>>  ")
+        print("No room name found in sonos_settings.py")
+        print("You can specify a room name manually below")
+        print("Note: manual entry works for testing purposes, but if you want this to run automatically on startup then you should specify a room name in sonos_settings.py")
+        print("You can edit the file with the command: nano sonos_settings.py")
+        print("")
+        sonos_room = input("Enter a Sonos room name for testing purposes>>>  ")
     else:
         sonos_room = sonos_settings.room_name_for_highres
         _LOGGER.info("Monitoring room: %s", sonos_room)
 
     session = ClientSession()
     sonos_data = SonosData(
-            sonos_settings.sonos_http_api_address,
-            sonos_settings.sonos_http_api_port,
-            sonos_room,
-            session,
+        sonos_settings.sonos_http_api_address,
+        sonos_settings.sonos_http_api_port,
+        sonos_room,
+        session,
     )
 
     async def webhook_callback():
@@ -208,7 +229,8 @@ async def main(loop):
     await webhook.listen()
 
     for signame in ('SIGINT', 'SIGTERM', 'SIGQUIT'):
-        loop.add_signal_handler(getattr(signal, signame), lambda: asyncio.ensure_future(cleanup(loop, session, webhook, display)))
+        loop.add_signal_handler(getattr(signal, signame), lambda: asyncio.ensure_future(
+            cleanup(loop, session, webhook, display)))
 
     while True:
         if sonos_data.webhook_active:
@@ -220,6 +242,7 @@ async def main(loop):
             await sonos_data.refresh()
             await redraw(session, sonos_data, display)
         await asyncio.sleep(1)
+
 
 async def cleanup(loop, session, webhook, display):
     """Cleanup tasks on shutdown."""
