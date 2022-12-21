@@ -2,6 +2,9 @@
 This file is for use with the Pimoroni HyperPixel 4.0 Square (Non Touch) High Res display
 it integrates with your local Sonos sytem to display what is currently playing
 """
+import spotipy
+from spotipy.oauth2 import SpotifyClientCredentials
+
 import asyncio
 import logging
 import os
@@ -37,6 +40,8 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 ###############################################################################
 # Functions
 
+client_credentials_manager = SpotifyClientCredentials(sonos_settings.spotify_client_id, sonos_settings.spotify_client_secret)
+spotify = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
 
 async def get_image_data(session, url):
     """Return image data from a URL if available."""
@@ -109,7 +114,15 @@ async def redraw(session, sonos_data, display):
         if sonos_data.uri.startswith('x-sonos-spotify:'):
            spotify_code_uri = sonos_data.uri.replace('x-sonos-spotify:', '')
         else:
-            spotify_code_uri = None 
+            #Add code here to search Spotify with spotipy for song title and artist...
+            results = spotify.search(q="artist:" + sonos_data.artist + " track:" + sonos_data.trackname, type="track", limit=1)
+
+            if results['tracks']['total'] != 0:
+                results = results['tracks']['items'][0]  # Find top result
+                uri = results['uri']
+                spotify_code_uri = uri
+            else:
+                spotify_code_uri = None 
 
         if spotify_code_uri != None:
             spotify_code_url = "".join(filter(None, [spotify_code_path, spotify_code_uri]))
