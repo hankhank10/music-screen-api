@@ -42,6 +42,9 @@ overlay_text = True
 # Also displaying state (volume, repeat, shuffle and crossfade) . Ignored if 'show_details' is False.
 show_play_state = True
 
+# Show a Spotify Code graphic for the currently playing song if playing from Spotify
+show_spotify_code = False
+
 # Turn off display (and backlight) when Sonos is playing from a TV source
 sleep_on_tv = False
 

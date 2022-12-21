@@ -64,7 +64,6 @@ async def redraw(session, sonos_data, display):
         return
 
     pil_image = None
-    code_image = None
 
     def should_sleep():
         """Determine if screen should be sleeping."""
@@ -85,7 +84,7 @@ async def redraw(session, sonos_data, display):
             # Ensure the album frame is displayed in case the current track was paused, seeked, etc
             if not display.is_showing:
                 display.show_album()
-            return
+            #return
 
         # slim down the trackname
         if sonos_settings.demaster and sonos_data.type not in ["line_in", "TV"]:
@@ -109,7 +108,6 @@ async def redraw(session, sonos_data, display):
         spotify_code_path = "https://scannables.scdn.co/uri/plain/png/368A7D/white/320/"
         if sonos_data.uri.startswith('x-sonos-spotify:'):
            spotify_code_uri = sonos_data.uri.replace('x-sonos-spotify:', '')
-           #spotify_code_uri = "spotify:track:5wEoNauEpwOc2rlU0274oT"
         else:
             spotify_code_uri = None 
 

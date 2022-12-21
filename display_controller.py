@@ -34,6 +34,7 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
 
         self.album_image = None
         self.thumb_image = None
+        self.code_image = None
         self.label_track = None
         self.label_detail = None
         self.label_play_state = None
@@ -194,6 +195,8 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
         self.backlight.set_power(False)
         self.curtain_frame.lift()
         self.root.update()
+        self.label_spotify_code.destroy()
+        self.label_spotify_code_detail.destroy()
 
     def update(self, code_image, image, sonos_data):
         """Update displayed image and text."""
@@ -337,13 +340,13 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
             self.label_play_state_album.place(relx=0.5, y= 10, anchor=tk.N)
             self.label_play_state_album.configure(font=self.play_state_font)
 
-        if not self.show_spotify_code or code_image == None or detail_text == "":
+        if not self.show_spotify_code or code_image == None  or detail_text == "":
             self.label_spotify_code.destroy()
             self.label_spotify_code_detail.destroy()
         else:
             if self.label_spotify_code.winfo_exists() == 0:
                 self.label_spotify_code = tk.Label(
-                    self.detail_frame,
+                    self.album_frame,
                     image=None,
                     borderwidth=0,
                     highlightthickness=0,
@@ -351,6 +354,8 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
                     bg="#368A7D",
                 )
                 self.label_spotify_code.place(relx=0.75, y=40, anchor=tk.N)
+            if code_image != None:
+                self.label_spotify_code.configure(image=code_image)
                 
             if self.label_spotify_code_detail.winfo_exists() == 0:
                 self.label_spotify_code_detail = tk.Label(
@@ -362,20 +367,16 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
                     bg="#368A7D",
                 )
                 self.label_spotify_code_detail.place(relx=0.75, y=40, anchor=tk.N)
-
-            #self.label_spotify_code.place(x=10, y= 10, anchor=tk.NE)
-            self.label_play_state.configure(font=self.play_state_font)
-            self.label_spotify_code.configure(image=code_image)
-            self.label_spotify_code_detail.configure(image=code_image)     
+            if code_image != None:
+                self.label_spotify_code_detail.configure(image=code_image) 
 
         self.label_albumart.configure(image=self.album_image)
         self.label_albumart_detail.configure(image=self.thumb_image)
         self.label_track.configure(font=self.track_font)
-
         self.track_name.set(display_trackname)
         self.detail_text.set(detail_text)
-        
         self.play_state_text.set(play_state_text)
+        
         self.root.update_idletasks()
         self.show_album(self.show_details, self.show_details_timeout)
 
