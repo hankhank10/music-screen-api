@@ -2,6 +2,13 @@
 
 ## General settings
 
+#Spotify API Details
+spotify_client_id = ""
+spotify_client_secret = ""
+
+# Show a Spotify Code graphic for the currently playing song if playing from Spotify
+show_spotify_code = False
+
 # Connection details for `node-sonos-http-api`
 sonos_http_api_address = "localhost"
 sonos_http_api_port = "5005"
@@ -41,9 +48,6 @@ overlay_text = True
 
 # Also displaying state (volume, repeat, shuffle and crossfade) . Ignored if 'show_details' is False.
 show_play_state = True
-
-# Show a Spotify Code graphic for the currently playing song if playing from Spotify
-show_spotify_code = False
 
 # Turn off display (and backlight) when Sonos is playing from a TV source
 sleep_on_tv = False

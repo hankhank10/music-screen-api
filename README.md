@@ -6,13 +6,15 @@ It uses either the Pimoroni wHAT e-ink display to display track information; or 
 
 ![sonos-music-api Examples of Display Modes](https://user-images.githubusercontent.com/42817877/153710473-2fbe9534-b7d6-423e-8fd3-20193611c99e.png)
 
-![sonos-music-api Examples of Display Modes Show Play Settings](https://user-images.githubusercontent.com/42817877/154847772-57a21f42-88be-4cdb-9ed4-a182ecc746ad.png)
+![sonos-music-api Examples of Display Modes Show Play Settings](https://user-images.githubusercontent.com/42817877/209093576-1bf5e0c0-ef5d-473f-8d7a-9d06ddb2f1e0.png)
 
 Works in real time with your local Sonos sytem. Also includes functionality to pull last played tracks and music history from last.fm.
 
 No authentication required for either service.
 
 Note: this replaces the now deprecated [ink-music-stats](https://github.com/hankhank10/ink-music-stats) repo.
+
+Note: A Spotify developer account ([Information here](https://developer.spotify.com/)) is required to display the Spotify Code of the playing track 
 
 # Required hardware
 
@@ -67,6 +69,19 @@ If running Raspbian / Raspberry Pi OS, this should work out of the box. If runni
 ```
 sudo pip3 install RPi.GPIO
 sudo gpasswd -a pi gpio
+
+```
+
+# Displaying Spotify Codes
+
+To display a Soptify Code for the playing song you need a Spotify Developer account ([Information here](https://developer.spotify.com/)), as well as adding your Client_ID and client_SECRET into the sonos_settings.py file and set the show_spotify_code to True as below:
+```
+#Spotify API Details
+spotify_client_id = ""
+spotify_client_secret = ""
+
+# Show a Spotify Code graphic for the currently playing song if playing from Spotify
+show_spotify_code = True
 
 ```
 
