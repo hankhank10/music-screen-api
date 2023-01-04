@@ -8,6 +8,7 @@ from spotipy.oauth2 import SpotifyClientCredentials
 import asyncio
 import logging
 import os
+import re
 import signal
 import subprocess
 import sys
@@ -109,7 +110,7 @@ async def redraw(session, sonos_data, display):
             if sonos_data.uri.startswith('x-sonos-spotify:'):
                 spotify_code_uri = sonos_data.uri.replace('x-sonos-spotify:', '')
             else:
-                results = spotify.search(q="artist:" + sonos_data.artist + " track:" + sonos_data.trackname, type="track", limit=1)
+                results = spotify.search(q="artist:" + re.sub("´|`|'|’", "", sonos_data.artist) + " track:" + re.sub("'´|`|'|’", "", sonos_data.trackname), type="track", limit=1)
 
                 if results['tracks']['total'] != 0:
                     results = results['tracks']['items'][0]  # Find top result

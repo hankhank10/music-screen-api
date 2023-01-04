@@ -2,13 +2,6 @@
 
 ## General settings
 
-#Spotify API Details
-spotify_client_id = ""
-spotify_client_secret = ""
-
-# Show a Spotify Code graphic for the currently playing song if playing from Spotify
-show_spotify_code = False
-
 # Connection details for `node-sonos-http-api`
 sonos_http_api_address = "localhost"
 sonos_http_api_port = "5005"
@@ -25,8 +18,14 @@ demaster = True
 # Send track and album names to http://demaster.hankapi.com for more advanced track name cleanup
 demaster_query_cloud = False
 
-
 ## High-res only settings
+
+#Spotify Developer API Details (only required if show_spotify_code = True)
+spotify_client_id = ""
+spotify_client_secret = ""
+
+# Show a Spotify Code graphic for the currently playing song if playing from Spotify
+show_spotify_code = False
 
 # Room name of Sonos speaker(s) to track
 room_name_for_highres = ""
