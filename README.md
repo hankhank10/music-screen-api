@@ -72,16 +72,22 @@ sudo gpasswd -a pi gpio
 
 ```
 
-# Displaying Spotify Codes
+# Displaying Spotify Codes or Using Spotify Album Art
 
-To display a Soptify Code for the playing song you need a Spotify Developer account ([Information here](https://developer.spotify.com/)), as well as adding your Client_ID and client_SECRET into the sonos_settings.py file and set the show_spotify_code to True as below:
+To display a Soptify Code or use Spotify album art instead of that loaded on to your Sonos system for the playing song, you need a Spotify Developer account ([Information here](https://developer.spotify.com/)), as well as adding your Client_ID and client_SECRET into the sonos_settings.py file and set the show_spotify_code and/or show_spotify_albumart to True as below:
 ```
 #Spotify API Details
 spotify_client_id = ""
 spotify_client_secret = ""
+spotify_market = None
 
 # Show a Spotify Code graphic for the currently playing song if playing from Spotify
 show_spotify_code = True
+
+#Overide the albumart with that from Spotify if available
+show_spotify_albumart = True
+
+NOTE: You can localise the SPotify search to your country using the spotify_market setting in sonos_settings.py by substuting None for one of the country codes recognised by the Spotify API ([Information Here](https://developer.spotify.com/documentation/web-api/reference/#/operations/search))
 
 ```
 

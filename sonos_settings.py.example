@@ -20,12 +20,16 @@ demaster_query_cloud = False
 
 ## High-res only settings
 
-#Spotify Developer API Details (only required if show_spotify_code = True)
+#Spotify Developer API Details (only required if show_spotify_code = True or show_spotify_albumart = True)
 spotify_client_id = ""
 spotify_client_secret = ""
+spotify_market = None
 
 # Show a Spotify Code graphic for the currently playing song if playing from Spotify
 show_spotify_code = False
+
+#Overide the albumart with that from Spotify if available
+show_spotify_albumart = False
 
 # Room name of Sonos speaker(s) to track
 room_name_for_highres = ""
