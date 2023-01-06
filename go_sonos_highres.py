@@ -40,15 +40,8 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 ###############################################################################
 # Functions
-
-if sonos_settings.show_spotify_code or sonos_settings.show_spotify_albumart:
-    client_credentials_manager = SpotifyClientCredentials(sonos_settings.spotify_client_id, sonos_settings.spotify_client_secret)
-    try:
-        spotify_auth_success = True
-        spotify = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
-    except Exception as err:
-        spotify_auth_success = False
-        _LOGGER.warning("Problem authorising Spotify Developer Account")
+show_spotify_code = getattr(sonos_settings, "show_spotify_code", None)
+show_spotify_albumart = getattr(sonos_settings, "show_spotify_albumart", None)
 
 async def get_image_data(session, url):
     """Return image data from a URL if available."""
@@ -107,7 +100,16 @@ async def redraw(session, sonos_data, display):
             sonos_data.trackname = await async_demaster.strip_name(sonos_data.trackname, session, offline)
             sonos_data.album = await async_demaster.strip_name(sonos_data.album, session, offline)
 
-        if sonos_settings.show_spotify_code or sonos_settings.show_spotify_albumart and spotify_auth_success:
+        if show_spotify_code or show_spotify_albumart:
+            client_credentials_manager = SpotifyClientCredentials(sonos_settings.spotify_client_id, sonos_settings.spotify_client_secret)
+            try:
+                spotify_auth_success = True
+                spotify = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
+            except Exception as err:
+                spotify_auth_success = False
+                _LOGGER.warning("Problem authorising Spotify Developer Account")
+
+        if show_spotify_code or show_spotify_albumart and spotify_auth_success:
             spotify_code_path = "https://scannables.scdn.co/uri/plain/png/368A7D/white/320/"
             if sonos_data.uri.startswith('x-sonos-spotify:'):
                 spotify_code_uri = sonos_data.uri.replace('x-sonos-spotify:', '')
@@ -142,7 +144,7 @@ async def redraw(session, sonos_data, display):
         else:
             code_image = None
 
-        if sonos_settings.show_spotify_albumart and spotify_auth_success and spotify_albumart_uri != None:
+        if show_spotify_albumart and spotify_auth_success and spotify_albumart_uri != None:
             image_data = await get_image_data(session, spotify_albumart_uri)
         else:
             image_data = await get_image_data(session, sonos_data.image_uri)
@@ -155,7 +157,7 @@ async def redraw(session, sonos_data, display):
             pil_image = Image.open(sys.path[0] + "/tv.png")
 
         if pil_image is None:
-            if sonos_settings.show_spotify_code or sonos_settings.show_spotify_albumart:
+            if show_spotify_code or show_spotify_albumart:
                  pil_image = Image.open(sys.path[0] + "/spotify_sonos.png")
             else:
                  pil_image = Image.open(sys.path[0] + "/sonos.png")
@@ -223,7 +225,7 @@ async def main(loop):
         sonos_settings, "show_details_timeout", None)
     overlay_text = getattr(sonos_settings, "overlay_text", None)
     show_play_state = getattr(sonos_settings, "show_play_state", None)
-    show_spotify_code = getattr(sonos_settings, "show_spotify_code", None)
+    
 
     try:
         display = DisplayController(loop, sonos_settings.show_details, sonos_settings.show_artist_and_album,

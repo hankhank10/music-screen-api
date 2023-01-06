@@ -25,7 +25,7 @@ spotify_client_id = ""
 spotify_client_secret = ""
 spotify_market = None
 
-# Show a Spotify Code graphic for the currently playing song if playing from Spotify
+# Show a Spotify Code graphic for the currently playing song if playing from Spotify, can be displayed if 'show_details' is either True or False.
 show_spotify_code = False
 
 #Overide the albumart with that from Spotify if available
