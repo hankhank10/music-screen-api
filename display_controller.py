@@ -38,7 +38,6 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
         self.label_track = None
         self.label_detail = None
         self.label_play_state = None
-        self.label_play_state_album = None
         self.label_spotify_code = None
         self.label_spotify_code_detail = None
         self.track_font = None
@@ -128,14 +127,6 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
             wraplength=700,
             justify="center",
         )
-        self.label_play_state_album = tk.Label(
-            self.album_frame,
-            textvariable=self.play_state_text,
-            fg="white",
-            bg="black",
-            wraplength=700,
-            justify="center",
-        )
         self.label_spotify_code = tk.Label(
             self.album_frame,
             image=None,
@@ -178,7 +169,6 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
                 self.timeout_future = self.loop.call_later(detail_timeout, handle_timeout)
         else:
             self.album_frame.lift()
-            self.label_play_state_album.destroy()
 
         self.is_showing = True
         self.root.update()
@@ -312,7 +302,6 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
 
         if not self.show_play_state:
             self.label_play_state.destroy()
-            self.label_play_state_album.destroy()
         else:
             if self.label_play_state.winfo_exists() == 0:
                 self.label_play_state = tk.Label(
@@ -326,19 +315,6 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
                 )
             self.label_play_state.place(relx=0.5, y= 10, anchor=tk.N)
             self.label_play_state.configure(font=self.play_state_font)
-
-            if self.label_play_state_album.winfo_exists() == 0:
-                self.label_play_state_album = tk.Label(
-                    self.album_frame,
-                    textvariable=self.play_state_text,
-                    font=self.play_state_font,
-                    fg="white",
-                    bg="black",
-                    wraplength=700,
-                    justify="center",
-                )
-            self.label_play_state_album.place(relx=0.5, y= 10, anchor=tk.N)
-            self.label_play_state_album.configure(font=self.play_state_font)
 
         if not self.show_spotify_code or code_image == None  or detail_text == "":
             self.label_spotify_code.destroy()
