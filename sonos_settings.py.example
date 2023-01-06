@@ -20,9 +20,9 @@ demaster_query_cloud = False
 
 ## High-res only settings
 
-#Spotify Developer API Details (only required if show_spotify_code = True or show_spotify_albumart = True)
-spotify_client_id = ""
-spotify_client_secret = ""
+#Spotify Developer API Details (only required if show_spotify_code = True or show_spotify_albumart = True), uncomment and add your apps details to use
+#spotify_client_id = ""
+#spotify_client_secret = ""
 spotify_market = None
 
 # Show a Spotify Code graphic for the currently playing song if playing from Spotify, can be displayed if 'show_details' is either True or False.

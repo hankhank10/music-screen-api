@@ -2,9 +2,6 @@
 This file is for use with the Pimoroni HyperPixel 4.0 Square (Non Touch) High Res display
 it integrates with your local Sonos sytem to display what is currently playing
 """
-import spotipy
-from spotipy.oauth2 import SpotifyClientCredentials
-
 import asyncio
 import logging
 import os
@@ -31,6 +28,18 @@ except ImportError:
     _LOGGER.error("ERROR: Config file not found. Copy 'sonos_settings.py.example' to 'sonos_settings.py' before you edit. You can do this with the command: cp sonos_settings.py.example sonos_settings.py")
     sys.exit(1)
 
+show_spotify_code = getattr(sonos_settings, "show_spotify_code", None)
+show_spotify_albumart = getattr(sonos_settings, "show_spotify_albumart", None)
+
+if show_spotify_code or show_spotify_albumart:
+    try:
+        import spotipy
+        from spotipy.oauth2 import SpotifyClientCredentials
+        spotify_import_success = True
+    except ImportError:
+        _LOGGER.error("ERROR: spotipy not found. Install spotipy with the command: pip install spotipy")
+        sys.exit(1)
+
 ###############################################################################
 # Global variables and setup
 POLLING_INTERVAL = 1
@@ -40,8 +49,6 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 ###############################################################################
 # Functions
-show_spotify_code = getattr(sonos_settings, "show_spotify_code", None)
-show_spotify_albumart = getattr(sonos_settings, "show_spotify_albumart", None)
 
 async def get_image_data(session, url):
     """Return image data from a URL if available."""
@@ -71,7 +78,10 @@ async def redraw(session, sonos_data, display):
     pil_image = None
     code_image = None
     spotify_code_uri = None
-    spotify_albumart_uri = None 
+    spotify_albumart_uri = None
+    spotify_client_id = None
+    spotify_client_secret = None
+    spotify_auth_success = False 
 
     def should_sleep():
         """Determine if screen should be sleeping."""
@@ -101,48 +111,55 @@ async def redraw(session, sonos_data, display):
             sonos_data.album = await async_demaster.strip_name(sonos_data.album, session, offline)
 
         if show_spotify_code or show_spotify_albumart:
-            client_credentials_manager = SpotifyClientCredentials(sonos_settings.spotify_client_id, sonos_settings.spotify_client_secret)
-            try:
-                spotify_auth_success = True
-                spotify = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
-            except Exception as err:
+            spotify_client_id = getattr(sonos_settings, "spotify_client_id", None)
+            spotify_client_secret = getattr(sonos_settings, "spotify_client_secret", None)
+
+            if spotify_client_id and spotify_client_secret:
+                client_credentials_manager = SpotifyClientCredentials(spotify_client_id, spotify_client_secret)
+                try:
+                    spotify_auth_success = True
+                    spotify = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
+                except:
+                    spotify_auth_success = False
+                    #_LOGGER.warning("Problem authorising Spotify Developer Account")
+            else:
                 spotify_auth_success = False
-                _LOGGER.warning("Problem authorising Spotify Developer Account")
 
-        if show_spotify_code or show_spotify_albumart and spotify_auth_success:
-            spotify_code_path = "https://scannables.scdn.co/uri/plain/png/368A7D/white/320/"
-            if sonos_data.uri.startswith('x-sonos-spotify:'):
-                spotify_code_uri = sonos_data.uri.replace('x-sonos-spotify:', '')
-            else:
-                results = spotify.search(q="artist:" + re.sub("´|`|'|’", "", sonos_data.artist) + " track:" + re.sub("´|`|'|’", "", sonos_data.trackname), type="track", limit=1, market=sonos_settings.spotify_market)
-
-                if results['tracks']['total'] != 0:
-                    results = results['tracks']['items'][0]  # Find top result
-                    uri = results['uri']
-                    spotify_albumart_uri = results['album']['images'][0]['url']
-                    spotify_code_uri = uri
+        if spotify_client_id and spotify_client_secret:
+            if show_spotify_code or show_spotify_albumart and spotify_auth_success:
+                spotify_code_path = "https://scannables.scdn.co/uri/plain/png/368A7D/white/320/"
+                if sonos_data.uri.startswith('x-sonos-spotify:'):
+                    spotify_code_uri = sonos_data.uri.replace('x-sonos-spotify:', '')
                 else:
-                    spotify_code_uri = None
-                    spotify_albumart_uri = None 
+                    results = spotify.search(q="artist:" + re.sub("´|`|'|’", "", sonos_data.artist) + " track:" + re.sub("´|`|'|’", "", sonos_data.trackname), type="track", limit=1, market=sonos_settings.spotify_market)
 
-            if spotify_code_uri != None:
-                spotify_code_url = "".join(filter(None, [spotify_code_path, spotify_code_uri]))
-            else:
-                spotify_code_url = None
+                    if results['tracks']['total'] != 0:
+                        results = results['tracks']['items'][0]  # Find top result
+                        uri = results['uri']
+                        spotify_albumart_uri = results['album']['images'][0]['url']
+                        spotify_code_uri = uri
+                    else:
+                        spotify_code_uri = None
+                        spotify_albumart_uri = None 
 
-            if spotify_code_url != None:
-                code_data = await get_image_data(session, spotify_code_url)
-                if code_data:
-                    code_image = Image.open(BytesIO(code_data))
+                if spotify_code_uri != None:
+                    spotify_code_url = "".join(filter(None, [spotify_code_path, spotify_code_uri]))
+                else:
+                    spotify_code_url = None
+
+                if spotify_code_url != None:
+                    code_data = await get_image_data(session, spotify_code_url)
+                    if code_data:
+                        code_image = Image.open(BytesIO(code_data))
+                    else:
+                        code_image = None
                 else:
                     code_image = None
+
+                if code_image == None:
+                    _LOGGER.info("Spotify Code not available")
             else:
                 code_image = None
-
-            if code_image == None:
-                _LOGGER.info("Spotify Code not available")
-        else:
-            code_image = None
 
         if show_spotify_albumart and spotify_auth_success and spotify_albumart_uri != None:
             image_data = await get_image_data(session, spotify_albumart_uri)
