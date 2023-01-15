@@ -16,7 +16,7 @@ class SonosDisplaySetupError(Exception):
 class DisplayController:  # pylint: disable=too-many-instance-attributes
     """Controller to handle the display hardware and GUI interface."""
 
-    def __init__(self, loop, show_details, show_artist_and_album, show_details_timeout, overlay_text, show_play_state):
+    def __init__(self, loop, show_details, show_artist_and_album, show_details_timeout, overlay_text, show_play_state, show_spotify_code):
         """Initialize the display controller."""
 
         self.SCREEN_W = 720
@@ -30,13 +30,16 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
         self.show_details_timeout = show_details_timeout
         self.overlay_text = overlay_text
         self.show_play_state = show_play_state
+        self.show_spotify_code = show_spotify_code
 
         self.album_image = None
         self.thumb_image = None
+        self.code_image = None
         self.label_track = None
         self.label_detail = None
         self.label_play_state = None
-        self.label_play_state_album = None
+        self.label_spotify_code = None
+        self.label_spotify_code_detail = None
         self.track_font = None
         self.detail_font = None
         self.timeout_future = None
@@ -78,8 +81,8 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
         self.detail_text = tk.StringVar()
         self.play_state_text = tk.StringVar()
 
-        self.detail_font = tkFont.Font(family="Helvetica", size=15)
-        self.play_state_font = tkFont.Font(family="Helvetica", size=17)
+        self.detail_font = tkFont.Font(family="consolas", size=14)
+        self.play_state_font = tkFont.Font(family="consolas", size=14)
 
         self.label_albumart = tk.Label(
             self.album_frame,
@@ -124,14 +127,25 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
             wraplength=700,
             justify="center",
         )
-        self.label_play_state_album = tk.Label(
+        self.label_spotify_code = tk.Label(
             self.album_frame,
-            textvariable=self.play_state_text,
+            image=None,
+            borderwidth=0,
+            highlightthickness=0,
             fg="white",
-            bg="black",
-            wraplength=700,
-            justify="center",
+            bg="#368A7D",
         )
+        self.label_spotify_code.place(relx=0.75, y=40, anchor=tk.N)
+        
+        self.label_spotify_code_detail = tk.Label(
+            self.detail_frame,
+            image=None,
+            borderwidth=0,
+            highlightthickness=0,
+            fg="white",
+            bg="#368A7D",
+        )
+        self.label_spotify_code_detail.place(relx=0.75, y=40, anchor=tk.N)
 
         self.album_frame.grid_propagate(False)
         self.detail_frame.grid_propagate(False)
@@ -155,7 +169,6 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
                 self.timeout_future = self.loop.call_later(detail_timeout, handle_timeout)
         else:
             self.album_frame.lift()
-            self.label_play_state_album.destroy()
 
         self.is_showing = True
         self.root.update()
@@ -172,14 +185,19 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
         self.backlight.set_power(False)
         self.curtain_frame.lift()
         self.root.update()
+        self.label_spotify_code.destroy()
+        self.label_spotify_code_detail.destroy()
 
-    def update(self, image, sonos_data):
+    def update(self, code_image, image, sonos_data):
         """Update displayed image and text."""
 
         def resize_image(image, length):
             """Resizes the image, assumes square image."""
             image = image.resize((length, length), ImageTk.Image.ANTIALIAS)
             return ImageTk.PhotoImage(image)
+
+        if code_image != None:
+           code_image = ImageTk.PhotoImage(code_image)
 
         display_trackname = sonos_data.trackname or sonos_data.station
 
@@ -203,64 +221,57 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
 
             play_state_volume_text = "Volume: " + str(play_state_volume)
 
-            play_state_shuffle_text = "Shuffle: " + str(play_state_shuffle)
+            play_state_shuffle_text = "Shuffle: " + str(play_state_shuffle).capitalize()
 
-            play_state_repeat_text = "Repeat: " + str(play_state_repeat)
+            play_state_repeat_text = "Repeat: " + str(play_state_repeat).capitalize()
 
-            play_state_crossfade_text = "Crossfade: " + str(play_state_crossfade)
+            play_state_crossfade_text = "Crossfade: " + str(play_state_crossfade).capitalize()
 
             play_state_text = " • ".join(filter(None, [play_state_volume_text, play_state_shuffle_text, play_state_repeat_text, play_state_crossfade_text]))
 
         if self.show_artist_and_album:
-            if len(display_trackname) > 30:
-                if len(detail_text) > 60:
-                    self.THUMB_H = 560
-                    self.THUMB_W = 560
+            if len(display_trackname) > 27:
+                if len(detail_text) > 54:
+                    self.THUMB_H = 565
+                    self.THUMB_W = 565
                 else:
-                    self.THUMB_H = 580
-                    self.THUMB_W = 580
+                    self.THUMB_H = 590
+                    self.THUMB_W = 590
                 if detail_text == "":
-                    self.track_font = tkFont.Font(family="Helvetica", size=30)
+                    self.track_font = tkFont.Font(family="consolas", size=27)
                 else:
-                    self.track_font = tkFont.Font(family="Helvetica", size=25)
+                    self.track_font = tkFont.Font(family="consolas", size=22)
             else:
-                if len(detail_text) > 60:
+                if len(detail_text) > 54:
                     self.THUMB_H = 600
                     self.THUMB_W = 600
                 else:
                     self.THUMB_H = 620
                     self.THUMB_W = 620
                 if detail_text == "":
-                    self.track_font = tkFont.Font(family="Helvetica", size=40)
+                    self.track_font = tkFont.Font(family="consolas", size=37)
                     self.THUMB_H = self.THUMB_H + 20
                     self.THUMB_W = self.THUMB_W + 20
                 else:
-                    self.track_font = tkFont.Font(family="Helvetica", size=30)
+                    self.track_font = tkFont.Font(family="consolas", size=27)
 
-            if len(display_trackname) > 30 and len(display_trackname) < 36:
+            if len(display_trackname) > 27 and len(display_trackname) < 34:
                 self.THUMB_H = self.THUMB_H + 40
                 self.THUMB_W = self.THUMB_W + 40
             
-            #if len(detail_text) > 45 and len(detail_text) < 50:
-            #    self.THUMB_H = self.THUMB_H + 20
-            #    self.THUMB_W = self.THUMB_W + 20
         else:
             if len(display_trackname) > 22:
                 self.THUMB_H = 610
                 self.THUMB_W = 610
-                self.track_font = tkFont.Font(family="Helvetica", size=30)
+                self.track_font = tkFont.Font(family="consolas", size=27)
             else:
                 self.THUMB_H = 640
                 self.THUMB_W = 640
-                self.track_font = tkFont.Font(family="Helvetica", size=40)
+                self.track_font = tkFont.Font(family="consolas", size=37)
 
             if len(display_trackname) > 22 and len(display_trackname) < 35:
                 self.THUMB_H = self.THUMB_H + 40
                 self.THUMB_W = self.THUMB_W + 40
-
-            #if len(detail_text) > 45 and len(detail_text) < 50:
-            #    self.THUMB_H = self.THUMB_H + 20
-            #    self.THUMB_W = self.THUMB_W + 20
 
         # Store the images as attributes to preserve scope for Tk
         self.album_image = resize_image(image, self.SCREEN_W)
@@ -291,7 +302,6 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
 
         if not self.show_play_state:
             self.label_play_state.destroy()
-            self.label_play_state_album.destroy()
         else:
             if self.label_play_state.winfo_exists() == 0:
                 self.label_play_state = tk.Label(
@@ -306,29 +316,47 @@ class DisplayController:  # pylint: disable=too-many-instance-attributes
             self.label_play_state.place(relx=0.5, y= 10, anchor=tk.N)
             self.label_play_state.configure(font=self.play_state_font)
 
-            if self.label_play_state_album.winfo_exists() == 0:
-                self.label_play_state_album = tk.Label(
+        if not self.show_spotify_code or code_image == None  or detail_text == "":
+            self.label_spotify_code.destroy()
+            self.label_spotify_code_detail.destroy()
+        else:
+            if self.label_spotify_code.winfo_exists() == 0:
+                self.label_spotify_code = tk.Label(
                     self.album_frame,
-                    textvariable=self.play_state_text,
-                    font=self.play_state_font,
+                    image=None,
+                    borderwidth=0,
+                    highlightthickness=0,
                     fg="white",
-                    bg="black",
-                    wraplength=700,
-                    justify="center",
+                    bg="#368A7D",
                 )
-            self.label_play_state_album.place(relx=0.5, y= 10, anchor=tk.N)
-            self.label_play_state_album.configure(font=self.play_state_font)
+                self.label_spotify_code.place(relx=0.75, y=40, anchor=tk.N)
+            if code_image != None:
+                self.label_spotify_code.configure(image=code_image)
+                
+            if self.label_spotify_code_detail.winfo_exists() == 0:
+                self.label_spotify_code_detail = tk.Label(
+                    self.detail_frame,
+                    image=None,
+                    borderwidth=0,
+                    highlightthickness=0,
+                    fg="white",
+                    bg="#368A7D",
+                )
+                self.label_spotify_code_detail.place(relx=0.75, y=40, anchor=tk.N)
+            if code_image != None:
+                self.label_spotify_code_detail.configure(image=code_image) 
 
         self.label_albumart.configure(image=self.album_image)
         self.label_albumart_detail.configure(image=self.thumb_image)
         self.label_track.configure(font=self.track_font)
-
         self.track_name.set(display_trackname)
         self.detail_text.set(detail_text)
         self.play_state_text.set(play_state_text)
+        
         self.root.update_idletasks()
         self.show_album(self.show_details, self.show_details_timeout)
 
     def cleanup(self):
         """Run cleanup actions."""
         self.backlight.cleanup()
+

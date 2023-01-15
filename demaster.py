@@ -20,9 +20,13 @@ def strip_name_offline(full_song_name):
         '- Remast',
         '(Remast',
         '- Live ',
+        '(Live ',
         '(Live at',
         '- Mono / Remast',
-        '- From '
+        '- From ',
+        '(From',
+        '- With',
+        '(With '
         ]
 
     for x in range (1990,2025):

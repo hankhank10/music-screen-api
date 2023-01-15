@@ -12,14 +12,24 @@ log_file = "~/music-screen-api.log"
 # One of ERROR, WARNING, INFO, DEBUG (in order of least to most verbose)
 log_level = "INFO"
 
-# Crop song names to remove nonsense such as "Remastered" or "live at"
+# Crop song and album names to remove nonsense such as "Remastered" or "live at"
 demaster = True
 
-# Send track names to http://demaster.hankapi.com for more advanced track name cleanup
+# Send track and album names to http://demaster.hankapi.com for more advanced track name cleanup
 demaster_query_cloud = False
 
-
 ## High-res only settings
+
+#Spotify Developer API Details (only required if show_spotify_code = True or show_spotify_albumart = True), uncomment and add your apps details to use
+#spotify_client_id = ""
+#spotify_client_secret = ""
+spotify_market = None
+
+# Show a Spotify Code graphic for the currently playing song if playing from Spotify, can be displayed if 'show_details' is either True or False.
+show_spotify_code = False
+
+#Overide the albumart with that from Spotify if available
+show_spotify_albumart = False
 
 # Room name of Sonos speaker(s) to track
 room_name_for_highres = ""
