@@ -124,7 +124,6 @@ async def redraw(session, sonos_data, display):
                     _LOGGER.warning("Problem authorising Spotify Developer Account, please check your credentials in sonos_settings.py are correct")
             else:
                 spotify_auth_success = False
-                _LOGGER.warning("No Spotify API client ID or Secret in settings file, cannot authenticate the Spotify API")
 
         if spotify_client_id and spotify_client_secret:
             if show_spotify_code or show_spotify_albumart and spotify_auth_success:
