@@ -88,7 +88,38 @@ show_spotify_code = True
 show_spotify_albumart = True
 ```
 
-NOTE: You can localise the Spotify search to your country using the `spotify_market` setting in `sonos_settings.py` by ` `None` for one of the country codes recognised by the Spotify API ([Information Here](https://developer.spotify.com/documentation/web-api/reference/#/operations/search))
+NOTE: You can localise the Spotify search to your country using the `spotify_market` setting in `sonos_settings.py` by `None` for one of the country codes recognised by the Spotify API ([Information Here](https://developer.spotify.com/documentation/web-api/reference/#/operations/search))
+
+If the script fails to execute on startup following the addition of yopur SPotify API detials and setting `show_spotify_code` and/or `show_spotify_albumart` to True, confirm if it is possible to manually execute the `go_sonos_highres.py` script using the following command from within the `music-screen-api` directory:
+
+```
+python3 go_sonos_highres.py
+```
+
+Open a command prompt: 
+
+```
+sudo nano /etc/xdg/lxsession/LXDE-pi/autostart
+```
+
+Then it is necessary to stop executing `go_sonos_highres.py` sccript with sudo privileges by changing the following line at the end of the file that has opened, 
+
+from:
+```
+@sudo /usr/bin/python3 /home/pi/music-screen-api/go_sonos_highres.py
+```
+
+to:
+```
+@/usr/bin/python3 /home/pi/music-screen-api/go_sonos_highres.py
+```
+
+If this doesn't work, you may not have setup your Spotify API details correctly, you can use the `spotipy_auth_search_test.py` script to help diagnose your problem using the following command from within the `music-screen-api` directory:
+
+```
+python3 spotipy_auth_search_test.py
+```
+Enter an artist and song title when prompted to see if you can successfully search Spotify using spotip[]
 
 # REST API
 
