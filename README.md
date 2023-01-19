@@ -74,7 +74,7 @@ sudo gpasswd -a pi gpio
 
 # Displaying Spotify Codes or Using Spotify Album Art
 
-To display a Spotify Code or use Spotify album art instead of that loaded on to your Sonos system for the playing song, you need to insstall spotipy ([https://pypi.org/project/spotipy/](https://pypi.org/project/spotipy/)) a Spotify Developer account ([Information here](https://developer.spotify.com/)), as well as adding your Client_ID and client_SECRET into the `sonos_settings.py` file you need to set the `show_spotify_code` and/or `show_spotify_albumart` to True as below:
+To display a Spotify Code or use Spotify album art instead of that loaded on to your Sonos system for the playing song, you need to install spotipy ([https://pypi.org/project/spotipy/](https://pypi.org/project/spotipy/)) and setup a Spotify Developer account ([Information here](https://developer.spotify.com/)), as well as adding your Spotify API Client_ID and Spotify API client_SECRET into the `sonos_settings.py` file, you also need to set the `show_spotify_code` and/or `show_spotify_albumart` to True as below:
 ```
 #Spotify API Details
 spotify_client_id = ""
@@ -84,15 +84,13 @@ spotify_market = None
 # Show a Spotify Code graphic for the currently playing song if playing from Spotify
 show_spotify_code = True
 
-#Overide the albumart with that from Spotify if available
+#Overide the album art with that from Spotify if available
 show_spotify_albumart = True
 ```
 
-NOTE: You can localise the Spotify search to your country using the `spotify_market` setting in `sonos_settings.py` by `None` for one of the country codes recognised by the Spotify API ([Information Here](https://developer.spotify.com/documentation/web-api/reference/#/operations/search))
+NOTE: You can localise the Spotify search to your country using the `spotify_market` setting in `sonos_settings.py` by changing `None` to one of the country codes recognised by the Spotify API ([Information Here](https://developer.spotify.com/documentation/web-api/reference/#/operations/search))
 
-Spotipy expects to have access to a `.cache` file 
-
-If the script fails to execute on startup following the addition of yopur SPotify API detials and setting `show_spotify_code` and/or `show_spotify_albumart` to True, confirm if it is possible to manually execute the `go_sonos_highres.py` script using the following command from within the `music-screen-api` directory:
+If the script fails to execute on startup following the addition of yopur Spotify API details and setting `show_spotify_code` and/or `show_spotify_albumart` to True, confirm if it is possible to manually execute the `go_sonos_highres.py` script using the following command from within the `music-screen-api` directory:
 
 ```
 python3 go_sonos_highres.py
@@ -104,7 +102,7 @@ Open a command prompt:
 sudo nano /etc/xdg/lxsession/LXDE-pi/autostart
 ```
 
-Then it is necessary to stop executing `go_sonos_highres.py` sccript with sudo privileges by changing the following line at the end of the file that has opened, 
+Then it is necessary to stop executing `go_sonos_highres.py` script with sudo privileges by changing the following line at the end of the file that has opened: 
 
 from:
 ```
@@ -123,9 +121,9 @@ python3 spotipy_auth_search_test.py
 ```
 Enter an artist and song title when prompted to see if you can successfully search Spotify using spotipy
 
-Depending on your user permissions, using the above instructions to autostart the `go_sonos_highres.py` sccript may lead to numerous warning messages in the log file as Spotipy expects to have access to a `.cache` file in the directory the script was executed from. If this is the case the newly added `music-screen-api-startup.sh` script can be used instead:
+Depending on your user permissions, using the above instructions to autostart the `go_sonos_highres.py` script may lead to numerous warning messages in the log file as spotipy expects to have access to a `.cache` file in the directory the script was executed from. If this is the case the newly added `music-screen-api-startup.sh` script can be used instead:
 
-The contents of `music-screen-api-startup.sh` is
+The contents of `music-screen-api-startup.sh` is:
 ```
 cd ~/music-screen-api
 python3 go_sonos_highres.py
@@ -137,7 +135,7 @@ Open a command prompt:
 sudo nano /etc/xdg/lxsession/LXDE-pi/autostart
 ```
 
- It is then necessary to stop executing `go_sonos_highres.py` sccript directly by changing the following line at the end of the file that has opened, 
+ It is then necessary to stop executing `go_sonos_highres.py` script directly by changing the following line at the end of the file that has opened: 
 
 from:
 ```

@@ -99,14 +99,17 @@ async def redraw(session, sonos_data, display):
     # see if something is playing
     if sonos_data.status == "PLAYING":
         new_track_info = sonos_data.is_track_new()
+        force_update = False
 
-        if not sonos_data.is_track_new():
+        if not new_track_info:
             # Ensure the album frame is displayed in case the current track was paused, seeked, etc
             if not display.is_showing:
+                _LOGGER.debug("Waking up display...")
+                force_update = True
                 display.show_album()
 
-        if new_track_info:
-            _LOGGER.debug("The new_track_info state is %s, restting display with new information", new_track_info)
+        if new_track_info or force_update:
+            _LOGGER.debug("The new_track_info state is %s and force_update state is %s, resetting display with new information", new_track_info, force_update)
         
             # slim down the trackname
             if sonos_settings.demaster and sonos_data.type not in ["line_in", "TV"]:
@@ -143,9 +146,9 @@ async def redraw(session, sonos_data, display):
                             results = results['tracks']['items'][0]  # Find top result
                             uri = results['uri']
                             spotify_albumart_uri = results['album']['images'][0]['url']
-                            _LOGGER.debug("Spotify Code URI successfully obtained")
+                            _LOGGER.debug("Spotify album art URI successfully obtained: %s", spotify_albumart_uri)
                             spotify_code_uri = uri
-                            _LOGGER.debug("Spotify album art URI successfully obtained")
+                            _LOGGER.debug("Spotify Code URI successfully obtained: %s", spotify_code_uri)
                         else:
                             spotify_code_uri = None
                             spotify_albumart_uri = None 
