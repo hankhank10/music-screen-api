@@ -174,7 +174,8 @@ async def redraw(session, sonos_data, display):
                 else:
                     code_image = None
             else:
-                _LOGGER.warning("No Spotify API client ID or Secret in settings file, cannot search the Spotify API")
+                if show_spotify_code or show_spotify_albumart:
+                    _LOGGER.warning("No Spotify API client ID or Secret in settings file, cannot search the Spotify API")
 
             if show_spotify_albumart and spotify_auth_success and spotify_albumart_uri != None:
                 image_data = await get_image_data(session, spotify_albumart_uri)
