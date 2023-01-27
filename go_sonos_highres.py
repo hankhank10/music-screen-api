@@ -139,21 +139,26 @@ async def redraw(session, sonos_data, display):
                     if show_spotify_code or show_spotify_albumart and spotify_auth_success:
                         spotify_code_path = "https://scannables.scdn.co/uri/plain/png/368A7D/white/320/"
 
-                        results = spotify.search(q="artist:" + re.sub("´|`|'|’", "", sonos_data.artist) + " track:" + re.sub("´|`|'|’", "", sonos_data.trackname), type="track", limit=1, market=sonos_settings.spotify_market)
+                        try:
+                            results = spotify.search(q="artist:" + re.sub("´|`|'|’", "", sonos_data.artist) + " track:" + re.sub("´|`|'|’", "", sonos_data.trackname), type="track", limit=1, market=sonos_settings.spotify_market)
 
-                        if results['tracks']['total'] != 0:
-                            results = results['tracks']['items'][0]  # Find top result
-                            uri = results['uri']
-                            spotify_albumart_uri = results['album']['images'][0]['url']
-                            _LOGGER.debug("Spotify album art URI successfully obtained: %s", spotify_albumart_uri)
-                            if sonos_data.uri.startswith('x-sonos-spotify:'):
-                                spotify_code_uri = sonos_data.uri.replace('x-sonos-spotify:', '')
-                            else:                            
-                                spotify_code_uri = uri
-                            _LOGGER.debug("Spotify Code URI successfully obtained: %s", spotify_code_uri)
-                        else:
+                            if results['tracks']['total'] != 0:
+                                results = results['tracks']['items'][0]  # Find top result
+                                uri = results['uri']
+                                spotify_albumart_uri = results['album']['images'][0]['url']
+                                _LOGGER.debug("Spotify album art URI successfully obtained: %s", spotify_albumart_uri)
+                                if sonos_data.uri.startswith('x-sonos-spotify:'):
+                                    spotify_code_uri = sonos_data.uri.replace('x-sonos-spotify:', '')
+                                else:                            
+                                    spotify_code_uri = uri
+                                _LOGGER.debug("Spotify Code URI successfully obtained: %s", spotify_code_uri)
+                            else:
+                                spotify_code_uri = None
+                                spotify_albumart_uri = None
+                        except:
                             spotify_code_uri = None
-                            spotify_albumart_uri = None 
+                            spotify_albumart_uri = None
+                            _LOGGER.warning("Problem searching Spotify, defaulting to Sonos system")
 
                         if spotify_code_uri != None:
                             spotify_code_url = "".join(filter(None, [spotify_code_path, spotify_code_uri]))
