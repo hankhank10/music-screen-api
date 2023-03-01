@@ -8,7 +8,7 @@ It uses either the Pimoroni wHAT e-ink display to display track information; or 
 
 ![sonos-music-api Examples of Display Modes Show Play Settings](https://user-images.githubusercontent.com/42817877/209093576-1bf5e0c0-ef5d-473f-8d7a-9d06ddb2f1e0.png)
 
-Works in real time with your local Sonos sytem. Also includes functionality to pull last played tracks and music history from last.fm.
+Works in real time with your local Sonos system. Also includes functionality to pull last played tracks and music history from last.fm.
 
 No authentication required for either service.
 
@@ -41,8 +41,7 @@ Note that before running go_sonos_highres.py you need to create your own copy of
 sudo apt install python3-tk
 sudo apt install python3-pil 
 sudo apt install python3-pil.imagetk
-sudo pip3 install requests
-sudo pip3 install aiohttp RPi.GPIO
+pip3 install -r requirements.txt
 ````
 
 # Webhook updates
