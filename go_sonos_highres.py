@@ -108,15 +108,15 @@ async def redraw(session, sonos_data, display):
                 force_update = True
                 display.show_album()
 
+        # slim down the album and track names
+        if sonos_settings.demaster and sonos_data.type not in ["line_in", "TV"]:
+            offline = not getattr(
+                sonos_settings, "demaster_query_cloud", False)
+            sonos_data.trackname = await async_demaster.strip_name(sonos_data.trackname, session, offline)
+            sonos_data.album = await async_demaster.strip_name(sonos_data.album, session, offline)
+
         if new_track_info or force_update:
             _LOGGER.debug("The new_track_info state is %s and force_update state is %s, resetting display with new information", new_track_info, force_update)
-        
-            # slim down the album and track names
-            if sonos_settings.demaster and sonos_data.type not in ["line_in", "TV"]:
-                offline = not getattr(
-                    sonos_settings, "demaster_query_cloud", False)
-                sonos_data.trackname = await async_demaster.strip_name(sonos_data.trackname, session, offline)
-                sonos_data.album = await async_demaster.strip_name(sonos_data.album, session, offline)
 
             if sonos_data.artist != "" and sonos_data.trackname !="":
                 if show_spotify_code or show_spotify_albumart:
