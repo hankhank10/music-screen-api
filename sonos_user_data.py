@@ -200,11 +200,14 @@ class SonosData():
         self.type = obj['currentTrack']['type']
         self.duration = obj['currentTrack']['duration']
 
-        if self.type == "line_in":
+        if "bluetooth:" in obj["currentTrack"]["uri"]:
+            self.type = track_id = "Bluetooth"
+
+        if self.type in ("line_in", "Bluetooth"):
             uri = obj['currentTrack']['uri']
             if uri.startswith('x-sonos-htastream:'):
                 self.type = track_id = "TV"
-            else:
+            elif self.type != "Bluetooth":
                 track_id = "Line-In"
             self.image_uri = None
             self.trackname = track_id

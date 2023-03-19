@@ -58,6 +58,9 @@ sleep_on_tv = False
 # Turn off display (and backlight) when Sonos is playing from a Line-In source
 sleep_on_linein = False
 
+# Turn off display (and backlight) when Sonos is playing from a Bluetooth source
+sleep_on_bluetooth = False
+
 
 ## e-ink only settings
 
