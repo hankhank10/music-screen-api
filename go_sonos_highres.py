@@ -89,6 +89,8 @@ async def redraw(session, sonos_data, display):
             return getattr(sonos_settings, "sleep_on_linein", False)
         if sonos_data.type == "TV":
             return getattr(sonos_settings, "sleep_on_tv", False)
+        if sonos_data.type == "Bluetooth":
+            return getattr(sonos_settings, "sleep_on_bluetooth", False)
 
     if should_sleep():
         if display.is_showing:
@@ -109,7 +111,7 @@ async def redraw(session, sonos_data, display):
                 display.show_album()
 
         # slim down the album and track names
-        if sonos_settings.demaster and sonos_data.type not in ["line_in", "TV"]:
+        if sonos_settings.demaster and sonos_data.type not in ("line_in", "TV", "Bluetooth"):
             offline = not getattr(
                 sonos_settings, "demaster_query_cloud", False)
             sonos_data.trackname = await async_demaster.strip_name(sonos_data.trackname, session, offline)
@@ -197,6 +199,8 @@ async def redraw(session, sonos_data, display):
                 pil_image = Image.open(sys.path[0] + "/line_in.png")
             elif sonos_data.type == "TV":
                 pil_image = Image.open(sys.path[0] + "/tv.png")
+            elif sonos_data.type == "Bluetooth":
+                pil_image = Image.open(sys.path[0] + "/bluetooth.png")
 
             if pil_image is None:
                 if show_spotify_code or show_spotify_albumart:
