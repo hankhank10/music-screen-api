@@ -31,7 +31,7 @@ class Backlight():
             GPIO.setmode(GPIO.BCM)
             GPIO.setup(BACKLIGHT_PIN, GPIO.OUT)
             self.active = True
-        except RuntimeError:
+        except Exception:
             self.active = False
             username = os.environ.get('USER')
             _LOGGER.error("Backlight control not available, please ensure '%s' is part of group 'gpio'.", username)

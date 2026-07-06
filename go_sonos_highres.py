@@ -76,6 +76,7 @@ async def redraw(session, sonos_data, display):
         return
 
     pil_image = None
+    image_data = None
     code_image = None
     spotify_code_uri = None
     spotify_albumart_uri = None
