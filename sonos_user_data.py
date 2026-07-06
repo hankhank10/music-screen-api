@@ -27,6 +27,7 @@ class SonosData():
         self.last_webhook = 0
         self.previous_image_uri = None
         self.previous_track = None
+        self._previous_source = None
         self.room = sonos_room
         self.session = session
         self.webhook_active = False
@@ -233,6 +234,13 @@ class SonosData():
                 self.image_uri = f"{speaker_uri}{album_art_uri}"
             else:
                 self.image_uri = obj['currentTrack'].get('absoluteAlbumArtUri', "")
+
+        current_source = f"{self.type}:{self.station}"
+        if current_source != self._previous_source:
+            _LOGGER.info("Source changed to: %s", current_source)
+            self._previous_source = current_source
+            self.previous_track = None
+            self.previous_image_uri = None
 
         if track_id != self.previous_track:
             _LOGGER.info("New track: %s", track_id)
