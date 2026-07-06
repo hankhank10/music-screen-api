@@ -116,10 +116,10 @@ class SonosData():
                     if self.raw_trackname == "TYPE=SNG|TITLE |ARTIST |ALBUM" :
                         self.raw_trackname = self.station
                         self.artist = ""
-                    else : 
+                    else :
                         self.artist = SplitStr[2][7:]
                         self.raw_trackname = SplitStr[1][6:]
-                        self.album = SplitStr[3][6:]
+                        self.album = SplitStr[3][6:] if len(SplitStr) > 3 else ""
                     if c == "~" :
                         self.album = ' '.join(word[0].upper() + word[1:] for word in splitstr[2].split())                     
                  elif self.raw_trackname.startswith("BR P|TYPE=SNG|") :

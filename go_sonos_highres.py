@@ -45,6 +45,10 @@ if show_spotify_code or show_spotify_albumart:
 POLLING_INTERVAL = 1
 WEBHOOK_INTERVAL = 60
 
+# Common words that shouldn't count as a meaningful artist-name match on their own
+# (e.g. "The Beatles" vs. a tribute band called "All The Yong Dudes" both contain "the")
+ARTIST_MATCH_STOPWORDS = {"the", "and", "feat", "featuring", "ft"}
+
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 ###############################################################################
@@ -118,7 +122,9 @@ async def redraw(session, sonos_data, display):
         if new_track_info or force_update:
             _LOGGER.debug("The new_track_info state is %s and force_update state is %s, resetting display with new information", new_track_info, force_update)
 
-            if sonos_data.artist != "" and sonos_data.trackname !="":
+            is_sonos_radio_ad = (sonos_data.type == "radio" and sonos_data.trackname == "" and sonos_data.artist == sonos_data.station)
+            is_dj_break = is_sonos_radio_ad or sonos_data.artist.startswith("@") or sonos_data.trackname.startswith("@") or sonos_data.trackname.startswith("#")
+            if sonos_data.artist != "" and sonos_data.trackname != "" and not is_dj_break:
                 if show_spotify_code or show_spotify_albumart:
                     spotify_client_id = getattr(sonos_settings, "spotify_client_id", None)
                     spotify_client_secret = getattr(sonos_settings, "spotify_client_secret", None)
@@ -140,19 +146,33 @@ async def redraw(session, sonos_data, display):
                         spotify_code_path = "https://scannables.scdn.co/uri/plain/png/368A7D/white/320/"
 
                         try:
-                            results = spotify.search(q="artist:" + re.sub("´|`|'|’", "", sonos_data.artist) + " track:" + re.sub("´|`|'|’", "", sonos_data.trackname), type="track", limit=1, market=sonos_settings.spotify_market)
+                            search_trackname = re.sub(r"\s*\(\d{2}\)$", "", sonos_data.trackname)
+                            search_trackname = search_trackname.split(" / ")[0]
+                            search_artist = re.sub("´|`|’|’", "", sonos_data.artist)
+                            results = spotify.search(q=search_artist + " " + re.sub("´|`|’|’", "", search_trackname), type="track", limit=5, market=sonos_settings.spotify_market)
+                            candidates = results['tracks']['items']
 
-                            if results['tracks']['total'] != 0:
-                                results = results['tracks']['items'][0]  # Find top result
-                                uri = results['uri']
-                                spotify_albumart_uri = results['album']['images'][0]['url']
+                            search_words = set(w for w in re.split(r'\W+', search_artist.lower()) if len(w) > 2 and w not in ARTIST_MATCH_STOPWORDS)
+                            match = None
+                            for candidate in candidates:
+                                result_words = set(w for w in re.split(r'\W+', candidate['artists'][0]['name'].lower()) if len(w) > 2 and w not in ARTIST_MATCH_STOPWORDS)
+                                if search_words and result_words and not search_words & result_words:
+                                    continue
+                                match = candidate
+                                break
+
+                            if match:
+                                uri = match['uri']
+                                spotify_albumart_uri = match['album']['images'][0]['url']
                                 _LOGGER.debug("Spotify album art URI successfully obtained: %s", spotify_albumart_uri)
                                 if sonos_data.uri.startswith('x-sonos-spotify:'):
                                     spotify_code_uri = sonos_data.uri.replace('x-sonos-spotify:', '')
-                                else:                            
+                                else:
                                     spotify_code_uri = uri
                                 _LOGGER.debug("Spotify Code URI successfully obtained: %s", spotify_code_uri)
                             else:
+                                if candidates:
+                                    _LOGGER.warning("Spotify artist mismatch: searched '%s', none of top %d results matched (got %s) — skipping", search_artist, len(candidates), ", ".join(c['artists'][0]['name'] for c in candidates))
                                 spotify_code_uri = None
                                 spotify_albumart_uri = None
                         except:
