@@ -188,6 +188,12 @@ async def redraw(session, sonos_data, display):
 
             if show_spotify_albumart and spotify_auth_success and spotify_albumart_uri != None:
                 image_data = await get_image_data(session, spotify_albumart_uri)
+            elif not is_dj_break and show_spotify_albumart:
+                fallback_path = os.path.join(sys.path[0], "fallback.png")
+                if os.path.isfile(fallback_path):
+                    pil_image = Image.open(fallback_path)
+                else:
+                    image_data = await get_image_data(session, sonos_data.image_uri)
             else:
                 image_data = await get_image_data(session, sonos_data.image_uri)
             
